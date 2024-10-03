@@ -1,0 +1,6 @@
+streamlit
+sqlalchemy
+loguru
+pandas
+openpyxl
+pyyaml
