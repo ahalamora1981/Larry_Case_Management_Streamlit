@@ -300,7 +300,7 @@ def ui_case_update() -> None:
         
     with col_22:
         with st.form("case_update_form"):
-            st.subheader("案件详情1")
+            st.subheader("案件详情")
             
             if case_selected is None:
                 disable_form_input = True
