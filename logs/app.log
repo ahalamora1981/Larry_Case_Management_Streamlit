@@ -40,3 +40,18 @@
 2024-10-04 00:19:36.257 | INFO     | __main__:login_ui:469 - 用户: tao 尝试登录
 2024-10-04 00:20:24.432 | INFO     | __main__:login_ui:469 - 用户: jun 尝试登录
 2024-10-04 00:20:31.524 | INFO     | __main__:login_ui:469 - 用户: xxx 尝试登录
+2024-10-04 08:31:21.744 | INFO     | __main__:ui_login:484 - 用户: admin 尝试登录
+2024-10-04 08:56:14.504 | INFO     | __main__:ui_login:502 - 用户: admin 尝试登录
+2024-10-04 08:56:25.484 | ERROR    | __main__:ui_case_upload:207 - Entity namespace for "case" has no property "user_name_and_list_id"
+2024-10-04 09:01:21.575 | ERROR    | __main__:ui_case_upload:207 - Query.filter() got an unexpected keyword argument 'user_name'
+2024-10-04 09:03:45.111 | ERROR    | __main__:ui_case_upload:202 - 【错误】案件 - 用户名: pdu77067146 - 列表ID: 497645778 已存在
+2024-10-04 09:54:01.782 | INFO     | __main__:ui_login:502 - 用户: admin 尝试登录
+2024-10-04 09:54:08.755 | ERROR    | __main__:ui_case_upload:217 - 'register_user_id' is an invalid keyword argument for Case
+2024-10-04 09:54:15.925 | ERROR    | __main__:ui_case_upload:217 - 'register_user_id' is an invalid keyword argument for Case
+2024-10-04 10:06:35.552 | INFO     | __main__:ui_login:502 - 用户: admin 尝试登录
+2024-10-04 10:09:43.241 | INFO     | __main__:ui_case_update:402 - 用户: admin 把案件 1 的状态从 2 更新为 2
+2024-10-04 10:11:18.578 | INFO     | __main__:ui_case_update:402 - 用户: admin 把案件 1 的状态从 2 更新为 2
+2024-10-04 10:11:29.318 | INFO     | __main__:ui_case_update:402 - 用户: admin 把案件 1 的状态从 2 更新为 4
+2024-10-04 10:17:43.738 | INFO     | __main__:ui_case_update:402 - 用户: admin 把案件 2 的状态从 1 更新为 6
+2024-10-04 10:19:40.244 | INFO     | __main__:ui_login:502 - 用户: jun 尝试登录
+2024-10-04 10:21:06.310 | INFO     | __main__:ui_login:505 - 用户: tao 尝试登录

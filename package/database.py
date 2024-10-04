@@ -25,7 +25,6 @@ class Case(Base):
 
     id = Column(Integer, primary_key=True)
     batch_id = Column(String)  # 批次ID YYYY-MM
-    user_name_and_list_id = Column(String, unique=True)  # 用户名+列表ID
     company_name = Column(String)  # 公司名称
     shou_bie = Column(String)  # 手别
     case_id = Column(String)  # 案件id
@@ -66,8 +65,8 @@ class Case(Base):
     court = Column(String)  # 法院全称
     status_id = Column(Integer, default=1)  # 状态序号
 
-    register_user_id = Column(Integer, ForeignKey('user.id'), nullable=False)
-    register_user = relationship("User", back_populates="cases", cascade="save-update")
+    case_register_user_id = Column(Integer, ForeignKey('user.id'), nullable=False)  # 立案负责人ID
+    case_register_user = relationship("User", back_populates="cases", cascade="save-update")  # 立案负责人
 
 
 class User(Base):
@@ -78,7 +77,7 @@ class User(Base):
     password = Column(String)  # 密码
     role = Column(String)  # 角色
 
-    cases = relationship("Case", back_populates="register_user", cascade="save-update")
+    cases = relationship("Case", back_populates="case_register_user", cascade="save-update")
 
 
 # 创建所有定义的表
@@ -116,16 +115,17 @@ def import_cases(xlsx_file: BytesIO, batch_id: str) -> str | None:
             last_pay_date = datetime.strptime(row['上一个还款日期'], "%Y-%m-%d %H:%M:%S.%f")
             
         case_selected = session.query(Case).filter_by(
-            user_name_and_list_id=f"{row['用户名']}--{row['列表ID']}"
+            user_name = row['用户名']
+        ).filter_by(
+            list_id = row['列表ID']
         ).first()
 
         if case_selected is not None:
-            return f"【错误】案件 {row['用户名']}--{row['列表ID']} 已存在"
+            return f"【错误】案件 - 用户名: {row['用户名']} - 列表ID: {row['列表ID']} 已存在"
             
         # 创建新的案件
         new_case = Case(
             batch_id=batch_id,
-            user_name_and_list_id = f"{row['用户名']}--{row['列表ID']}",
             company_name = row['公司名称'],
             shou_bie = row['手别'],
             case_id = row['案件id'],
@@ -165,7 +165,7 @@ def import_cases(xlsx_file: BytesIO, batch_id: str) -> str | None:
             province_city = row['所属省/市'],
             court = row['法院全称'],
             status_id = 1,
-            register_user_id = 1,
+            case_register_user_id = 2,
         )
         session.add(new_case)
         session.commit()
@@ -182,11 +182,11 @@ def get_case_by_id(id: int) -> Case | None:
     
     return case
 
-def update_case_status(id: int, user_id: int, status_id: int) -> None:
+def update_case(id: int, user_id: int, status_id: int) -> None:
     session = Session()
     case = session.query(Case).filter_by(id=str(id)).first()
     case.status_id = status_id
-    case.register_user_id = user_id
+    case.case_register_user_id = user_id
     session.commit()
     session.close()
 
