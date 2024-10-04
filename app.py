@@ -15,6 +15,7 @@ from package.database import (
     import_cases,
     add_user,
     delete_user,
+    reset_password,
     update_case,
     load_status_list,
 )
@@ -88,7 +89,7 @@ def sidebar() -> None:
         # 根据不用角色(Role)显示不同的页面选项和默认选项
         if st.session_state.role == "admin":
             page_options = ["案件上传", "案件更新", "用户管理"]
-            default_page = 1
+            default_page = 0
         elif st.session_state.role == "manager":
             page_options = ["案件更新", "用户管理"]
             default_page = 0
@@ -352,12 +353,13 @@ def ui_case_update() -> None:
                 disabled=True,
             )
             
-            # 立案负责人
+            # 根据立案负责人ID，获取立案负责人在所有用户中的索引位置；如立案负责人ID为None，则设置索引位置为None
             if case_register_user_id is None:
                 case_register_user_index = None
             else:
                 case_register_user_index = all_usernames.index(get_user_by_id(case_register_user_id).username)
             
+            # 如登录角色为员工(staff)，则不能更改立案负责人(即新立案负责人与原立案负责人相同)
             if st.session_state.role == "staff":
                 new_user_id = case_register_user_id
             else:
@@ -368,17 +370,21 @@ def ui_case_update() -> None:
                     disabled=disable_form_input,
                 )
                 
-                if case_register_user_index is None:
+                # 立案负责人ID为None，则新立案负责人ID为None
+                # 否则，先通过新用户名确定其在所有用户名中的索引，然后通过其在所有用户名中的索引确定其ID
+                if case_register_user_id is None:
                     new_user_id = None
                 else:
                     new_user_id = all_users[all_usernames.index(new_username)].id
             
-            # 案件状态 
+            # 如未选择案件或案件对象为空，则状态序号为None
+            # 否则，通过状态序号确定其状态名称，然后通过状态名称确定其状态序号 
             if status_id is None:
                 status_index = None
             else:
                 status_index = status_df['案件状态'].tolist().index(status_df.loc[status_id, '案件状态'])
             
+            # 案件状态的下拉框
             new_status = st.selectbox(
                 "案件状态",
                 options=status_df['案件状态'], 
@@ -386,8 +392,11 @@ def ui_case_update() -> None:
                 disabled=disable_form_input,
             )
             
+            # 重置状态表的索引，以便通过“序号”列确定状态序号
             status_df_reset_index = status_df.reset_index()
             
+            # 如未选择案件或案件对象为空，则状态序号为None
+            # 否则，通过状态名称确定其状态序号
             if status_id is None:
                 new_status_id = None
             else:
@@ -400,6 +409,7 @@ def ui_case_update() -> None:
                 type="primary",
                 disabled=update_button_disabled,
             ):
+                # 更新案件，输入参数为案件ID、新立案负责人ID、新状态序号
                 update_case(case_selected.id, new_user_id, new_status_id)
                 
                 logger.info(f"用户: {st.session_state.username} 把案件 {case_selected.id} 的状态从 {case_selected.status_id} 更新为 {new_status_id}")
@@ -407,6 +417,30 @@ def ui_case_update() -> None:
                 st.rerun()
 
 def ui_user_management() -> None:
+    # 确认弹窗
+    @st.dialog("确认删除用户")
+    def confirm_delete_user(user_id: int) -> None:
+        col_1, col_2 = st.columns(2)
+        with col_1:
+            if st.button("确认", use_container_width=True, type="primary"):
+                delete_user(user_id)
+                st.rerun()
+        with col_2:
+            if st.button("取消", use_container_width=True):
+                st.rerun()
+
+    # 确认弹窗
+    @st.dialog("确认重置密码")
+    def confirm_reset_password(user_id: int, hashed_password: str) -> None:
+        col_1, col_2 = st.columns(2)
+        with col_1:
+            if st.button("确认", use_container_width=True, type="primary"):
+                reset_password(user_id, hashed_password)
+                st.rerun()
+        with col_2:
+            if st.button("取消", use_container_width=True):
+                st.rerun()
+                
     st.header("用户管理")
 
     user_df = read_from_sql('user')
@@ -424,30 +458,14 @@ def ui_user_management() -> None:
     id_selected = None
     user_selected = None
     
+    # 如选择行，则获取该行的ID，再通过ID获取用户对象
     if len(index_selected['selection']['rows']) > 0:
         id_selected = user_df.reset_index()['id'][index_selected['selection']['rows'][0]]
         user_selected = get_user_by_id(id_selected)
     
     with col_2:
-        if user_selected is not None:
-            with st.form("delete_user_form"):
-                st.subheader("删除用户")
-                
-                st.text_input(
-                    "用户名", 
-                    value=user_selected.username, 
-                    disabled=True,
-                )
-
-                st.text_input(
-                    "角色", 
-                    value=user_selected.role, 
-                    disabled=True,
-                )
-
-                if st.form_submit_button("删除用户", use_container_width=True, type="primary"):
-                    confirm_delete_user(user_selected.id)
-        else:
+        # 如没有选中的用户，则显示添加用户表单
+        if user_selected is None:
             with st.form("add_user_form"):
                 st.subheader("添加用户")
                 
@@ -476,21 +494,51 @@ def ui_user_management() -> None:
                         st.error(result)
                     else:
                         st.rerun()
+                        
+        # 如有选中的用户，且id不为1(即用户不是admin)，则显示删除用户和重置密码表单
+        elif user_selected is not None and id_selected != 1:
+            with st.form("delete_user_form"):
+                st.subheader("删除用户")
+                
+                st.text_input(
+                    "用户名", 
+                    value=user_selected.username, 
+                    disabled=True,
+                )
 
-    @st.dialog("确认删除用户")
-    def confirm_delete_user(user_id) -> None:
-        col_1, col_2 = st.columns(2)
-        with col_1:
-            if st.button("确认", use_container_width=True, type="primary"):
-                delete_user(user_id)
-                st.rerun()
-        with col_2:
-            if st.button("取消", use_container_width=True):
-                st.rerun()
+                if st.form_submit_button("删除用户", use_container_width=True, type="primary"):
+                    confirm_delete_user(user_selected.id)
+                    
+            with st.form("reset_password_form"):
+                st.subheader("重置密码")
+                
+                st.text_input(
+                    "用户名", 
+                    value=user_selected.username, 
+                    disabled=True,
+                )
+
+                new_password = st.text_input(
+                    "新密码", 
+                    value="", 
+                    type="password",
+                )
+                
+                hashed_password = hash_password(new_password)
+
+                if st.form_submit_button("重置密码", use_container_width=True, type="primary"):
+                    if new_password == "":
+                        st.error("请输入新密码")
+                    else:
+                        confirm_reset_password(user_selected.id, hashed_password)
+                        
+        # 其余情况(即有选中的用户，且id为1，是admin)，则不显示表单
+        else:
+            pass
 
 def ui_login() -> None:
     with st.form("login_form"):
-        st.header("法诉案件管理系统 - 登录页面")
+        st.header("法诉案件管理系统")
         username = st.text_input("用户名").strip()
         password = st.text_input("密码", type="password")
 

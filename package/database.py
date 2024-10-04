@@ -109,11 +109,13 @@ def import_cases(xlsx_file: BytesIO, batch_id: str) -> str | None:
     df = pd.read_excel(xlsx_file, dtype=str)
 
     for _, row in df.iterrows():
+        # 处理空值，把Pandas的NaN转换为SQLAlchemy的None
         if str(row['上一个还款日期']) == 'nan':
             last_pay_date = None
         else:
             last_pay_date = datetime.strptime(row['上一个还款日期'], "%Y-%m-%d %H:%M:%S.%f")
-            
+        
+        # 检查案件是否已存在，“用户名”+“列表ID”作为唯一键
         case_selected = session.query(Case).filter_by(
             user_name = row['用户名']
         ).filter_by(
@@ -170,6 +172,7 @@ def import_cases(xlsx_file: BytesIO, batch_id: str) -> str | None:
         session.add(new_case)
         session.commit()
         
+        # 更新进度条
         progress_percentage += (1 / df.shape[0])
         progress_bar.progress(progress_percentage, text=progress_text)
             
@@ -229,5 +232,12 @@ def delete_user(id: int) -> None:
     session = Session()
     user_to_delete = session.query(User).filter_by(id=id).first()
     session.delete(user_to_delete)
+    session.commit()
+    session.close()
+
+def reset_password(id: int, hashed_password: str) -> None:
+    session = Session()
+    user = session.query(User).filter_by(id=id).first()
+    user.password = hashed_password
     session.commit()
     session.close()
