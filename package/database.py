@@ -4,7 +4,7 @@ import pandas as pd
 import streamlit as st
 from io import BytesIO
 from datetime import datetime
-from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, Float, Boolean, Date, DateTime
+from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, Float, Date, DateTime
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
 
@@ -185,11 +185,20 @@ def get_case_by_id(id: int) -> Case | None:
     
     return case
 
-def update_case(id: int, user_id: int, status_id: int) -> None:
+def update_case(id: int, user_id: int | None, status_id: int | None) -> None:
     session = Session()
     case = session.query(Case).filter_by(id=str(id)).first()
-    case.status_id = status_id
-    case.case_register_user_id = user_id
+    if user_id is not None:
+        case.case_register_user_id = user_id
+    if status_id is not None:
+        case.status_id = status_id
+    session.commit()
+    session.close()
+
+def delete_case_by_id(id: int | None) -> None:
+    session = Session()
+    case_to_delete = session.query(Case).filter_by(id=id).first()
+    session.delete(case_to_delete)
     session.commit()
     session.close()
 

@@ -58,3 +58,33 @@
 2024-10-04 10:40:55.828 | INFO     | __main__:ui_login:505 - 用户: admin 尝试登录
 2024-10-04 10:53:02.181 | INFO     | __main__:ui_login:531 - 用户: jun 尝试登录
 2024-10-04 10:53:17.109 | INFO     | __main__:ui_login:531 - 用户: tao 尝试登录
+2024-10-04 14:44:03.900 | INFO     | __main__:ui_login:553 - 用户: tao 尝试登录
+2024-10-04 14:55:08.609 | INFO     | __main__:ui_login:513 - 用户: admin 尝试登录
+2024-10-04 15:11:29.220 | INFO     | __main__:ui_case_update:383 - 用户: admin 把案件 1 的状态从 1 更新为 2
+2024-10-04 15:11:38.339 | INFO     | __main__:ui_case_update:383 - 用户: admin 把案件 2 的状态从 1 更新为 4
+2024-10-04 15:12:01.337 | INFO     | __main__:ui_case_update:383 - 用户: admin 把案件 1 的状态从 2 更新为 1
+2024-10-04 15:12:07.628 | INFO     | __main__:ui_case_update:383 - 用户: admin 把案件 2 的状态从 4 更新为 1
+2024-10-04 15:21:21.243 | INFO     | __main__:ui_login:524 - 用户: stan 尝试登录
+2024-10-04 15:22:18.235 | INFO     | __main__:ui_login:525 - 用户: admin 尝试登录
+2024-10-04 16:24:16.105 | INFO     | __main__:ui_login:525 - 用户: admin 尝试登录
+2024-10-04 16:38:06.037 | ERROR    | __main__:ui_case_upload:184 - 【错误】案件 - 用户名: 2-pdu77067146 - 列表ID: 497645778 已存在
+2024-10-04 17:53:22.924 | INFO     | __main__:ui_login:538 - 用户: admin 尝试登录
+2024-10-04 19:04:47.441 | INFO     | __main__:ui_login:624 - 用户: tao 尝试登录
+2024-10-04 19:04:55.690 | INFO     | __main__:ui_login:624 - 用户: admin 尝试登录
+2024-10-04 19:06:26.266 | INFO     | __main__:ui_case_update:434 - 用户: admin 把案件 1 的状态从 1 更新为 1
+2024-10-04 19:06:28.671 | INFO     | __main__:ui_case_update:434 - 用户: admin 把案件 2 的状态从 1 更新为 1
+2024-10-04 19:06:31.902 | INFO     | __main__:ui_case_update:434 - 用户: admin 把案件 4 的状态从 1 更新为 1
+2024-10-04 19:06:36.124 | INFO     | __main__:ui_login:624 - 用户: tao 尝试登录
+2024-10-04 19:06:44.908 | INFO     | __main__:ui_login:624 - 用户: admin 尝试登录
+2024-10-04 19:06:53.957 | INFO     | __main__:ui_case_update:434 - 用户: admin 把案件 1 的状态从 1 更新为 1
+2024-10-04 19:11:43.767 | INFO     | __main__:ui_case_update:438 - 用户: admin 把案件 3 的状态从 1 更新为 6
+2024-10-04 19:11:51.773 | INFO     | __main__:ui_case_update:438 - 用户: admin 把案件 3 的状态从 6 更新为 6
+2024-10-04 19:15:05.029 | INFO     | __main__:ui_case_update:434 - 用户: admin 把案件 1 的状态从 1 更新为 2
+2024-10-04 19:15:12.642 | INFO     | __main__:ui_case_update:434 - 用户: admin 把案件 2 的状态从 1 更新为 6
+2024-10-04 19:15:21.728 | INFO     | __main__:ui_case_update:434 - 用户: admin 把案件 3 的状态从 6 更新为 5
+2024-10-04 19:15:36.831 | INFO     | __main__:ui_case_update:434 - 用户: admin 把案件 5 的状态从 1 更新为 4
+2024-10-04 19:17:01.302 | INFO     | __main__:ui_login:624 - 用户: tao 尝试登录
+2024-10-04 19:17:19.465 | INFO     | __main__:ui_login:624 - 用户: stan 尝试登录
+2024-10-04 19:54:14.626 | INFO     | __main__:ui_login:658 - 用户: stan 尝试登录
+2024-10-04 19:54:22.514 | INFO     | __main__:ui_login:658 - 用户: admin 尝试登录
+2024-10-04 19:54:30.257 | ERROR    | __main__:ui_case_upload:189 - 【错误】案件 - 用户名: pdu77067146 - 列表ID: 497645778 已存在
