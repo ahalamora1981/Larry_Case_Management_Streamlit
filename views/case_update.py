@@ -3,6 +3,7 @@ import streamlit as st
 from loguru import logger
 
 from package.database import (
+    Session,
     Case,
     get_case_by_id, 
     get_all_users,
@@ -30,8 +31,11 @@ def confirm_update_cases(
     col_1, col_2 = st.columns(2)
     with col_1:
         if st.button("确认", use_container_width=True, type="primary"):
+            session = Session()
             for case in cases:
-                update_case(case.id, new_user_id, new_status_id)
+                update_case(session, case.id, new_user_id, new_status_id)
+            session.commit()
+            session.close()
             st.rerun()
     with col_2:
         if st.button("取消", use_container_width=True):
@@ -270,7 +274,10 @@ with col_2:
                 disabled=update_button_disabled,
             ):
                 # 更新案件，输入参数为案件ID、新立案负责人ID、新状态序号
-                update_case(case_selected.id, new_user_id, new_status_id)
+                session = Session()
+                update_case(session, case_selected.id, new_user_id, new_status_id)
+                session.commit()
+                session.close()
                 
                 logger.info(f"用户: {st.session_state.username} 把案件 {case_selected.id} 的状态从 {case_selected.status_id} 更新为 {new_status_id}")
                     
@@ -280,8 +287,10 @@ with col_2:
             
         # 如选择了行，则获取该行的行ID和案件对象
         if len(index_selected['selection']['rows']) > 0:
+            case_df_reset_index = case_df.reset_index()
+            
             for index in index_selected['selection']['rows']:
-                case_id = case_df.reset_index().loc[index, 'id']
+                case_id = case_df_reset_index.loc[index, 'id']
                 cases_selected.append(get_case_by_id(case_id))
                 
             update_button_disabled = False
@@ -344,7 +353,7 @@ with col_2:
             ):
                 confirm_update_cases(cases_selected, new_user_id, new_status_id)
                 
-        # 批量更新立案负责人
+        # 批量删除
         if st.session_state.role != "staff":
             with st.form("cases_delete_form"):
                 st.subheader("批量删除")

@@ -7,6 +7,7 @@ from datetime import datetime
 from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, Float, Date, DateTime
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
+from sqlalchemy.orm import Session as SessionClass
 
 
 CWD = os.getcwd()
@@ -47,7 +48,7 @@ class Case(Base):
     loan_terms = Column(Integer)  # 借款期数
     interest_rate = Column(Float)  # 利率
     overdue_start_date = Column(Date)  # 逾期开始日期
-    last_pay_date = Column(DateTime)  # 上一个还款日期
+    last_pay_date = Column(Date)  # 上一个还款日期
     overdue_days = Column(Integer)  # 列表逾期天数
     outstanding_principal = Column(Float)  # 待还本金
     outstanding_charge = Column(Float)  # 待还费用
@@ -109,12 +110,6 @@ def import_cases(xlsx_file: BytesIO, batch_id: str) -> str | None:
     df = pd.read_excel(xlsx_file, dtype=str)
 
     for _, row in df.iterrows():
-        # 处理空值，把Pandas的NaN转换为SQLAlchemy的None
-        if str(row['上一个还款日期']) == 'nan':
-            last_pay_date = None
-        else:
-            last_pay_date = datetime.strptime(row['上一个还款日期'], "%Y-%m-%d %H:%M:%S.%f")
-        
         # 检查案件是否已存在，“用户名”+“列表ID”作为唯一键
         case_selected = session.query(Case).filter_by(
             user_name = row['用户名']
@@ -128,44 +123,44 @@ def import_cases(xlsx_file: BytesIO, batch_id: str) -> str | None:
         # 创建新的案件
         new_case = Case(
             batch_id=batch_id,
-            company_name = row['公司名称'],
-            shou_bie = row['手别'],
-            case_id = row['案件id'],
-            user_id = row['用户ID'],
-            user_name = row['用户名'],
-            full_name = row['用户姓名'],
-            id_card = row['身份证号码'],
-            gender = row['性别'],
-            nationality = row['民族'],
-            id_card_address = row['身份证地址'],
-            mobile_phone = row['注册手机号'],
-            list_id = row['列表ID'],
-            rongdan_mode = row['融担模式'],
-            contract_id = row['合同号'],
-            capital_institution = row['资方机构'],
-            rongdan_company = row['融担公司'],
-            contract_amount = float(row['合同金额']),
-            loan_date = datetime.strptime(row['放款日期'], "%Y-%m-%d").date(),
-            last_due_date = datetime.strptime(row['最后一期应还款日'], "%Y-%m-%d").date(),
-            loan_terms = int(row['借款期数']),
-            interest_rate = float(row['利率']),
-            overdue_start_date = datetime.strptime(row['逾期开始日期'], "%Y-%m-%d").date(),
-            last_pay_date = last_pay_date,
-            overdue_days = int(row['列表逾期天数']),
-            outstanding_principal = float(row['待还本金']),
-            outstanding_charge = float(row['待还费用']),
-            outstanding_amount = float(row['待还金额']),
-            data_collection_date = datetime.strptime(row['数据提取日'], "%Y-%m-%d").date(),
-            total_repurchase_principal = float(row['代偿回购本金']),
-            total_repurchase_interest = float(row['代偿回购利息']),
-            total_repurchase_penalty = float(row['代偿回购罚息']),
-            total_repurchase_all = float(row['代偿回购总额']),
-            latest_repurchase_date = row['最晚代偿时间'],
-            can_lawsuit = row['是否可诉'],
-            law_firm = row['承办律所'],
-            lawyer = row['承办律师'],
-            province_city = row['所属省/市'],
-            court = row['法院全称'],
+            company_name = row['公司名称'] if not pd.isna(row['公司名称']) else None,
+            shou_bie = row['手别'] if not pd.isna(row['手别']) else None,
+            case_id = row['案件id'] if not pd.isna(row['案件id']) else None,
+            user_id = row['用户ID'] if not pd.isna(row['用户ID']) else None,
+            user_name = row['用户名'] if not pd.isna(row['用户名']) else None,
+            full_name = row['用户姓名'] if not pd.isna(row['用户姓名']) else None,
+            id_card = row['身份证号码'] if not pd.isna(row['身份证号码']) else None,
+            gender = row['性别'] if not pd.isna(row['性别']) else None,
+            nationality = row['民族'] if not pd.isna(row['民族']) else None,
+            id_card_address = row['身份证地址'] if not pd.isna(row['身份证地址']) else None,
+            mobile_phone = row['注册手机号'] if not pd.isna(row['注册手机号']) else None,
+            list_id = row['列表ID'] if not pd.isna(row['列表ID']) else None,
+            rongdan_mode = row['融担模式'] if not pd.isna(row['融担模式']) else None,
+            contract_id = row['合同号'] if not pd.isna(row['合同号']) else None,
+            capital_institution = row['资方机构'] if not pd.isna(row['资方机构']) else None,
+            rongdan_company = row['融担公司'] if not pd.isna(row['融担公司']) else None,
+            contract_amount = float(row['合同金额']) if not pd.isna(row['合同金额']) else None,
+            loan_date = datetime.strptime(row['放款日期'][:10], "%Y-%m-%d").date() if not pd.isna(row['放款日期']) else None,
+            last_due_date = datetime.strptime(row['最后一期应还款日'][:10], "%Y-%m-%d").date() if not pd.isna(row['最后一期应还款日']) else None,
+            loan_terms = int(row['借款期数']) if not pd.isna(row['借款期数']) else None,
+            interest_rate = float(row['利率']) if not pd.isna(row['利率']) else None,
+            overdue_start_date = datetime.strptime(row['逾期开始日期'][:10], "%Y-%m-%d").date() if not pd.isna(row['逾期开始日期']) else None,
+            last_pay_date = datetime.strptime(row['上一个还款日期'][:10], "%Y-%m-%d") if not pd.isna(row['上一个还款日期']) else None,
+            overdue_days = int(row['列表逾期天数']) if not pd.isna(row['列表逾期天数']) else None,
+            outstanding_principal = float(row['待还本金']) if not pd.isna(row['待还本金']) else None,
+            outstanding_charge = float(row['待还费用']) if not pd.isna(row['待还费用']) else None,
+            outstanding_amount = float(row['待还金额']) if not pd.isna(row['待还金额']) else None,
+            data_collection_date = datetime.strptime(row['数据提取日'][:10], "%Y-%m-%d").date() if not pd.isna(row['数据提取日']) else None,
+            total_repurchase_principal = float(row['代偿回购本金']) if not pd.isna(row['代偿回购本金']) else None,
+            total_repurchase_interest = float(row['代偿回购利息']) if not pd.isna(row['代偿回购利息']) else None,
+            total_repurchase_penalty = float(row['代偿回购罚息']) if not pd.isna(row['代偿回购罚息']) else None,
+            total_repurchase_all = float(row['代偿回购总额']) if not pd.isna(row['代偿回购总额']) else None,
+            latest_repurchase_date = row['最晚代偿时间'] if not pd.isna(row['最晚代偿时间']) else None,
+            can_lawsuit = row['是否可诉'] if not pd.isna(row['是否可诉']) else None,
+            law_firm = row['承办律所'] if not pd.isna(row['承办律所']) else None,
+            lawyer = row['承办律师'] if not pd.isna(row['承办律师']) else None,
+            province_city = row['所属省/市'] if not pd.isna(row['所属省/市']) else None,
+            court = row['法院全称'] if not pd.isna(row['法院全称']) else None,
             status_id = 1,
             case_register_user_id = 2,
         )
@@ -178,6 +173,13 @@ def import_cases(xlsx_file: BytesIO, batch_id: str) -> str | None:
             
     session.close()
 
+def get_all_cases() -> list[Case]:
+    session = Session()
+    cases = session.query(Case).all()
+    session.close()
+
+    return cases
+
 def get_case_by_id(id: int) -> Case | None:
     session = Session()
     case = session.query(Case).filter_by(id=str(id)).first()
@@ -185,15 +187,19 @@ def get_case_by_id(id: int) -> Case | None:
     
     return case
 
-def update_case(id: int, user_id: int | None, status_id: int | None) -> None:
+def get_case_by_batch_id(batch_id: str) -> list[Case]:
     session = Session()
+    cases = session.query(Case).filter_by(batch_id=batch_id).all()
+    session.close()
+
+    return cases
+
+def update_case(session: SessionClass, id: int, user_id: int | None, status_id: int | None) -> None:
     case = session.query(Case).filter_by(id=str(id)).first()
     if user_id is not None:
         case.case_register_user_id = user_id
     if status_id is not None:
         case.status_id = status_id
-    session.commit()
-    session.close()
 
 def delete_case_by_id(id: int | None) -> None:
     session = Session()
@@ -208,6 +214,16 @@ def get_all_users() -> list[User]:
     session.close()
 
     return users
+
+def get_all_users_df() -> pd.DataFrame:
+    session = Session()
+    users = session.query(User).all()
+    session.close()
+
+    df = pd.DataFrame([user.__dict__ for user in users])
+    df = df.drop(columns=['_sa_instance_state'])
+
+    return df
 
 def get_user_by_username(username: str) -> User | None:
     session = Session()

@@ -1,11 +1,25 @@
 import os
+import time
 import hashlib
 import pandas as pd
+from loguru import logger
 
-from package.database import get_user_by_id
+from package.database import get_user_by_id, get_all_users_df
 
 
 CWD = os.getcwd()
+
+# Timer decorator
+def timer(func):
+    def wrapper(*args, **kwargs):
+        start_time = time.time()
+        result = func(*args, **kwargs)
+        end_time = time.time()
+        execution_time = end_time - start_time
+        print(f"Function {func.__name__} took {execution_time:.6f} seconds to execute.")
+        logger.info(f"Function {func.__name__} took {execution_time:.6f} seconds to execute.")
+        return result
+    return wrapper
 
 def hash_password(password: str, salt: str = "2024"):
     # 将密码和盐组合在一起
@@ -17,6 +31,7 @@ def hash_password(password: str, salt: str = "2024"):
     # 返回哈希后的密码
     return hashed_password
 
+@timer
 def get_case_df_display(
     case_df: pd.DataFrame,
     status_df: pd.DataFrame,    
@@ -29,9 +44,12 @@ def get_case_df_display(
     case_df_display = case_df[[item[0] for item in columns_pairs]]
     case_df_display.columns = [item[1] for item in columns_pairs]
     
+    all_users_df = get_all_users_df()
+    all_users_df.set_index('id', inplace=True)
+
     # 在 case_df_to_display 中添加 '立案负责人' 、'案件阶段'、和 '案件状态' 列
     for case_id, user_id, status_id in zip(case_df_display.index, case_df_display['立案负责人ID'], case_df_display['状态序号']):
-        case_df_display.loc[case_id, '立案负责人'] = get_user_by_id(user_id).username
+        case_df_display.loc[case_id, '立案负责人'] = all_users_df.loc[user_id, 'username']
         case_df_display.loc[case_id, '案件阶段'] = status_df.loc[status_id, '案件阶段']
         case_df_display.loc[case_id, '案件状态'] = status_df.loc[status_id, '案件状态']
     

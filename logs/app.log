@@ -107,3 +107,29 @@
 2024-10-07 16:23:13.912 | INFO     | __main__:ui_login:28 - 用户: admin 尝试登录
 2024-10-07 16:24:37.445 | INFO     | __main__:ui_login:28 - 用户: tao 尝试登录
 2024-10-07 16:24:43.156 | INFO     | __main__:ui_login:28 - 用户: jun 尝试登录
+2024-10-07 16:44:39.385 | INFO     | __main__:ui_login:28 - 用户: stan 尝试登录
+2024-10-07 22:48:19.352 | INFO     | __main__:ui_login:28 - 用户: tao 尝试登录
+2024-10-07 22:48:31.644 | INFO     | __main__:ui_login:28 - 用户: stan 尝试登录
+2024-10-07 23:27:12.650 | ERROR    | __page__:<module>:114 - '融担模式'
+2024-10-07 23:27:53.469 | ERROR    | __page__:<module>:114 - unconverted data remains:  20:48:18.586
+2024-10-07 23:41:33.918 | ERROR    | __page__:<module>:114 - unconverted data remains:  20:48:18.586
+2024-10-07 23:46:50.535 | INFO     | __main__:ui_login:28 - 用户: admin 尝试登录
+2024-10-07 23:49:20.842 | ERROR    | __page__:<module>:114 - '最晚代偿时间'
+2024-10-07 23:57:38.078 | INFO     | package.utils:wrapper:20 - Function get_case_df_display took 6.101217 seconds to execute.
+2024-10-08 00:01:42.065 | INFO     | package.utils:wrapper:20 - Function get_case_df_display took 5.431654 seconds to execute.
+2024-10-08 00:03:50.320 | INFO     | package.utils:wrapper:20 - Function get_case_df_display took 5.170503 seconds to execute.
+2024-10-08 00:05:20.842 | INFO     | package.utils:wrapper:20 - Function get_case_df_display took 4.780410 seconds to execute.
+2024-10-08 00:06:34.929 | INFO     | package.utils:wrapper:20 - Function get_case_df_display took 0.681078 seconds to execute.
+2024-10-08 00:06:38.380 | INFO     | package.utils:wrapper:20 - Function get_case_df_display took 0.623957 seconds to execute.
+2024-10-08 00:07:26.925 | INFO     | package.utils:wrapper:20 - Function get_case_df_display took 0.658714 seconds to execute.
+2024-10-08 00:07:46.970 | INFO     | package.utils:wrapper:20 - Function get_case_df_display took 0.761337 seconds to execute.
+2024-10-08 00:07:49.524 | INFO     | package.utils:wrapper:20 - Function get_case_df_display took 0.598847 seconds to execute.
+2024-10-08 00:07:51.766 | INFO     | package.utils:wrapper:20 - Function get_case_df_display took 0.666036 seconds to execute.
+2024-10-08 00:08:05.931 | INFO     | package.utils:wrapper:20 - Function get_case_df_display took 0.811404 seconds to execute.
+2024-10-08 00:08:31.027 | INFO     | package.utils:wrapper:20 - Function get_case_df_display took 0.681986 seconds to execute.
+2024-10-08 00:20:00.699 | INFO     | package.utils:wrapper:20 - Function get_case_df_display took 0.569546 seconds to execute.
+2024-10-08 00:20:03.783 | INFO     | package.utils:wrapper:20 - Function get_case_df_display took 0.572913 seconds to execute.
+2024-10-08 00:20:17.808 | INFO     | package.utils:wrapper:20 - Function get_case_df_display took 0.547413 seconds to execute.
+2024-10-08 00:20:30.822 | INFO     | package.utils:wrapper:20 - Function get_case_df_display took 0.724615 seconds to execute.
+2024-10-08 00:20:45.816 | INFO     | package.utils:wrapper:20 - Function get_case_df_display took 0.654710 seconds to execute.
+2024-10-08 00:20:47.223 | INFO     | package.utils:wrapper:20 - Function get_case_df_display took 0.669086 seconds to execute.
