@@ -9,7 +9,7 @@ from package.database import (
     load_status_list,
 )
 from package.utils import get_case_df_display
-from pages.sidebar import sidebar
+from views.sidebar import sidebar
 
 
 sidebar("案件上传")

@@ -42,15 +42,15 @@ def ui_main() -> None:
     
     if st.session_state.role in ["admin", "manager"]:
         pg = st.navigation([
-            st.Page(os.path.join(CWD, "pages", "main_page.py"), title="系统主页"),
-            st.Page(os.path.join(CWD, "pages", "case_upload.py"), title="案件上传"),
-            st.Page(os.path.join(CWD, "pages", "case_update.py"), title="案件更新"),
-            st.Page(os.path.join(CWD, "pages", "user_management.py"),  title="用户管理"),
+            st.Page(os.path.join(CWD, "views", "main_view.py"), title="系统主页"),
+            st.Page(os.path.join(CWD, "views", "case_upload.py"), title="案件上传"),
+            st.Page(os.path.join(CWD, "views", "case_update.py"), title="案件更新"),
+            st.Page(os.path.join(CWD, "views", "user_management.py"),  title="用户管理"),
         ])
     else:
         pg = st.navigation([
-            st.Page(os.path.join(CWD, "pages", "main_page.py"), title="系统主页"),
-            st.Page(os.path.join(CWD, "pages", "case_update.py"), title="案件更新"),
+            st.Page(os.path.join(CWD, "views", "main_view.py"), title="系统主页"),
+            st.Page(os.path.join(CWD, "views", "case_update.py"), title="案件更新"),
         ])
         
     pg.run()

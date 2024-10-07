@@ -9,7 +9,7 @@ from package.database import (
     reset_password,
 )
 from package.utils import hash_password
-from pages.sidebar import sidebar
+from views.sidebar import sidebar
 
 
 sidebar("用户管理")

@@ -1,5 +1,5 @@
 import streamlit as st
-from pages.sidebar import sidebar
+from views.sidebar import sidebar
 
 
 sidebar("主页")
