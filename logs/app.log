@@ -240,3 +240,6 @@
 2024-10-08 08:33:22.424 | INFO     | package.utils:wrapper:20 - Function get_case_df_display took 0.505919 seconds to execute.
 2024-10-08 08:33:24.884 | INFO     | package.utils:wrapper:20 - Function get_case_df_display took 0.603607 seconds to execute.
 2024-10-08 08:33:25.684 | INFO     | package.utils:wrapper:20 - Function get_case_df_display took 0.550981 seconds to execute.
+2024-10-08 15:19:35.968 | INFO     | __main__:ui_login:28 - 用户: admin 尝试登录
+2024-10-08 16:48:48.335 | INFO     | __main__:ui_login:28 - 用户: admin 尝试登录
+2024-10-08 17:11:57.068 | INFO     | __page__:<module>:299 - 用户: admin 把案件 605 的状态从 1 更新为 1

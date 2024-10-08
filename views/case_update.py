@@ -8,7 +8,8 @@ from package.database import (
     get_case_by_id, 
     get_all_users,
     get_user_by_id,
-    read_from_sql, 
+    get_all_batch_ids,
+    read_case_from_sql, 
     update_case,
     delete_case_by_id,
     load_status_list,
@@ -40,8 +41,8 @@ def confirm_update_cases(
         progress_bar = st.progress(progress_percentage, text=progress_text)
         
         session = Session()
-        for i, case in enumerate(cases):
-            update_case(session, case.id, new_user_id, new_status_id)
+        for i, this_case in enumerate(cases):
+            update_case(session, this_case.id, new_user_id, new_status_id)
             # 更新进度条
             progress_percentage = i / len(cases)
             progress_bar.progress(progress_percentage, text=progress_text)
@@ -64,20 +65,20 @@ def confirm_delete_cases(cases: list[Case]) -> None:
         progress_bar = st.progress(progress_percentage, text=progress_text)
         
         session = Session()
-        for i, case in enumerate(cases):
-            delete_case_by_id(session, case.id)
+        for i, this_case in enumerate(cases):
+            delete_case_by_id(session, this_case.id)
             # 更新进度条
             progress_percentage = i / len(cases)
             progress_bar.progress(progress_percentage, text=progress_text)
         session.commit()
         session.close()
         st.rerun()
-            
-# 读取案件信息表和状态列表
-case_df = read_from_sql('case')
+
+all_batch_ids = get_all_batch_ids()
+
 status_df = load_status_list()
 
-if case_df.empty:
+if not all_batch_ids:
     st.warning("案件信息表为空")
     st.stop()
 
@@ -113,12 +114,6 @@ columns_pairs = [
     ('status_id', '状态序号'),
     ('case_register_user_id', '立案负责人ID')
 ]
-
-case_df_display = get_case_df_display(case_df, status_df, columns_pairs)
-
-if case_df_display.empty:
-    st.warning("案件信息表为空")
-    st.stop()
     
 col_1, col_2 = st.columns([3, 1])
 
@@ -136,10 +131,7 @@ with col_1:
             label_visibility="collapsed",
         )
         
-        if multi_select == '多选(批量更新或删除)':
-            multi_select = True
-        else:
-            multi_select = False
+        multi_select = True if multi_select == '多选(批量更新或删除)' else False
         
         if multi_select:
             selection_mode = "multi-row"
@@ -150,7 +142,7 @@ with col_1:
         # 在页面中添加批次ID的下拉框
         batch_id = st.selectbox(
             "批次ID",
-            options=case_df_display['批次ID'].unique(),
+            options=get_all_batch_ids(),
             label_visibility="collapsed",
             placeholder="选择批次ID",
             index=0,
@@ -166,8 +158,9 @@ with col_1:
         
     # 如选择了批次ID，则针对该批次ID进行筛选
     if batch_id is not None:
-        case_df_display = case_df_display[case_df_display['批次ID'] == batch_id]
-    
+        case_df = read_case_from_sql(batch_id)
+        case_df_display = get_case_df_display(case_df, status_df, columns_pairs)
+
     # 如输入了用户名，则针对该用户名进行筛选
     if user_name:
         case_df_display = case_df_display[case_df_display['用户名'] == user_name]

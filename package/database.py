@@ -4,7 +4,7 @@ import pandas as pd
 import streamlit as st
 from io import BytesIO
 from datetime import datetime
-from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, Float, Date, DateTime
+from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, Float, Date, MetaData, Table, select, distinct, and_
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
 from sqlalchemy.orm import Session as SessionClass
@@ -22,7 +22,7 @@ Base = declarative_base()
 
 
 class Case(Base):
-    __tablename__ = 'case'
+    __tablename__ = 'cases'
 
     id = Column(Integer, primary_key=True)
     batch_id = Column(String)  # 批次ID YYYY-MM
@@ -67,12 +67,12 @@ class Case(Base):
     court = Column(String)  # 法院全称
     status_id = Column(Integer, default=1)  # 状态序号
 
-    case_register_user_id = Column(Integer, ForeignKey('user.id'), nullable=False)  # 立案负责人ID
+    case_register_user_id = Column(Integer, ForeignKey('users.id'), nullable=False)  # 立案负责人ID
     case_register_user = relationship("User", back_populates="cases", cascade="save-update")  # 立案负责人
 
 
 class User(Base):
-    __tablename__ = 'user'
+    __tablename__ = 'users'
 
     id = Column(Integer, primary_key=True)
     username = Column(String, unique=True)  # 用户名
@@ -96,8 +96,21 @@ def load_status_list() -> pd.DataFrame:
     
     return df
 
-def read_from_sql(table_name: str) -> pd.DataFrame:
-    df = pd.read_sql_table(table_name, engine_lawsuit, index_col='id')
+def get_all_batch_ids() -> list[str]:
+    session = Session()
+    # 查询所有非重复的 batch_id
+    result = session.query(distinct(Case.batch_id)).all()
+    all_batch_ids = [batch_id[0] for batch_id in result]
+    session.close()
+    return all_batch_ids
+
+def read_case_from_sql(batch_id: str) -> pd.DataFrame:
+    query = f"SELECT * FROM cases WHERE batch_id = '{batch_id}'"
+    df = pd.read_sql_query(query, engine_lawsuit, index_col='id')
+    return df
+
+def read_user_from_sql() -> pd.DataFrame:
+    df = pd.read_sql_table("users", engine_lawsuit, index_col='id')
     return df
 
 def import_cases(xlsx_file: BytesIO, batch_id: str) -> str | None:
@@ -183,9 +196,9 @@ def get_all_cases() -> list[Case]:
     return cases
 
 def get_case_by_id(session: SessionClass, id: int) -> Case | None:
-    case = session.query(Case).filter_by(id=str(id)).first()
+    this_case = session.query(Case).filter_by(id=str(id)).first()
     
-    return case
+    return this_case
 
 def get_case_by_batch_id(batch_id: str) -> list[Case]:
     session = Session()
@@ -195,11 +208,11 @@ def get_case_by_batch_id(batch_id: str) -> list[Case]:
     return cases
 
 def update_case(session: SessionClass, id: int, user_id: int | None, status_id: int | None) -> None:
-    case = session.query(Case).filter_by(id=str(id)).first()
+    this_case = session.query(Case).filter_by(id=str(id)).first()
     if user_id is not None:
-        case.case_register_user_id = user_id
+        this_case.case_register_user_id = user_id
     if status_id is not None:
-        case.status_id = status_id
+        this_case.status_id = status_id
 
 def delete_case_by_id(session: SessionClass, id: int | None) -> None:
     case_to_delete = session.query(Case).filter_by(id=id).first()

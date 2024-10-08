@@ -3,7 +3,7 @@ import streamlit as st
 
 from package.database import (
     get_user_by_id,
-    read_from_sql, 
+    read_user_from_sql, 
     add_user,
     delete_user,
     reset_password,
@@ -40,7 +40,7 @@ def confirm_reset_password(user_id: int, hashed_password: str) -> None:
         if st.button("取消", use_container_width=True):
             st.rerun()
 
-user_df = read_from_sql('user')
+user_df = read_user_from_sql()
 user_df = user_df.loc[user_df['username'] != 'admin']
 user_df = user_df.loc[user_df['username'] != 'none']
 user_df = user_df.loc[user_df['username'] != st.session_state.username]
