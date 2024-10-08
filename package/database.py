@@ -26,6 +26,7 @@ class Case(Base):
 
     id = Column(Integer, primary_key=True)
     batch_id = Column(String)  # 批次ID YYYY-MM
+    batch_date = Column(Date)  # 批次日期
     company_name = Column(String)  # 公司名称
     shou_bie = Column(String)  # 手别
     case_id = Column(String)  # 案件id
@@ -123,6 +124,7 @@ def import_cases(xlsx_file: BytesIO, batch_id: str) -> str | None:
         # 创建新的案件
         new_case = Case(
             batch_id=batch_id,
+            batch_date=datetime.strptime(batch_id, "%Y-%m").date(),
             company_name = row['公司名称'] if not pd.isna(row['公司名称']) else None,
             shou_bie = row['手别'] if not pd.isna(row['手别']) else None,
             case_id = row['案件id'] if not pd.isna(row['案件id']) else None,
@@ -180,10 +182,8 @@ def get_all_cases() -> list[Case]:
 
     return cases
 
-def get_case_by_id(id: int) -> Case | None:
-    session = Session()
+def get_case_by_id(session: SessionClass, id: int) -> Case | None:
     case = session.query(Case).filter_by(id=str(id)).first()
-    session.close()
     
     return case
 
@@ -201,12 +201,9 @@ def update_case(session: SessionClass, id: int, user_id: int | None, status_id: 
     if status_id is not None:
         case.status_id = status_id
 
-def delete_case_by_id(id: int | None) -> None:
-    session = Session()
+def delete_case_by_id(session: SessionClass, id: int | None) -> None:
     case_to_delete = session.query(Case).filter_by(id=id).first()
     session.delete(case_to_delete)
-    session.commit()
-    session.close()
 
 def get_all_users() -> list[User]:
     session = Session()

@@ -30,29 +30,48 @@ def confirm_update_cases(
 ) -> None:
     col_1, col_2 = st.columns(2)
     with col_1:
-        if st.button("确认", use_container_width=True, type="primary"):
-            session = Session()
-            for case in cases:
-                update_case(session, case.id, new_user_id, new_status_id)
-            session.commit()
-            session.close()
-            st.rerun()
+        confirm_btn = st.button("确认", use_container_width=True, type="primary")
     with col_2:
         if st.button("取消", use_container_width=True):
             st.rerun()
+    if confirm_btn:
+        progress_text = "批量更新中..."
+        progress_percentage = 0
+        progress_bar = st.progress(progress_percentage, text=progress_text)
+        
+        session = Session()
+        for i, case in enumerate(cases):
+            update_case(session, case.id, new_user_id, new_status_id)
+            # 更新进度条
+            progress_percentage = i / len(cases)
+            progress_bar.progress(progress_percentage, text=progress_text)
+        session.commit()
+        session.close()
+        st.rerun()
             
 # 确认弹窗
 @st.dialog("确认删除案件")
 def confirm_delete_cases(cases: list[Case]) -> None:
     col_1, col_2 = st.columns(2)
     with col_1:
-        if st.button("确认", use_container_width=True, type="primary"):
-            for case in cases:
-                delete_case_by_id(case.id)
-            st.rerun()
+        confirm_btn = st.button("确认", use_container_width=True, type="primary")
     with col_2:
         if st.button("取消", use_container_width=True):
             st.rerun()
+    if confirm_btn:
+        progress_text = "批量删除中..."
+        progress_percentage = 0
+        progress_bar = st.progress(progress_percentage, text=progress_text)
+        
+        session = Session()
+        for i, case in enumerate(cases):
+            delete_case_by_id(session, case.id)
+            # 更新进度条
+            progress_percentage = i / len(cases)
+            progress_bar.progress(progress_percentage, text=progress_text)
+        session.commit()
+        session.close()
+        st.rerun()
             
 # 读取案件信息表和状态列表
 case_df = read_from_sql('case')
@@ -134,7 +153,7 @@ with col_1:
             options=case_df_display['批次ID'].unique(),
             label_visibility="collapsed",
             placeholder="选择批次ID",
-            index=None,
+            index=0,
         )
     
     with col_13:
@@ -171,7 +190,9 @@ case_selected = None
 # 如选择了行，则获取该行的行ID和案件对象
 if len(index_selected['selection']['rows']) > 0:
     id_selected = case_df.reset_index()['id'][index_selected['selection']['rows'][0]]
-    case_selected = get_case_by_id(id_selected)
+    session = Session()
+    case_selected = get_case_by_id(session, id_selected)
+    session.close()
 
 # 如选择了案件且案件对象不为空，则获取案件的姓名、律师、立案负责人、和案件状态，并取消“更新按钮”禁用(即按钮可点击)
 if case_selected is not None:
@@ -289,10 +310,11 @@ with col_2:
         if len(index_selected['selection']['rows']) > 0:
             case_df_reset_index = case_df.reset_index()
             
+            session = Session()
             for index in index_selected['selection']['rows']:
                 case_id = case_df_reset_index.loc[index, 'id']
-                cases_selected.append(get_case_by_id(case_id))
-                
+                cases_selected.append(get_case_by_id(session, case_id))
+            session.close()
             update_button_disabled = False
         else:
             update_button_disabled = True

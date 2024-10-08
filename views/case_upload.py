@@ -75,13 +75,27 @@ case_df_display = get_case_df_display(case_df, status_df, columns_pairs)
 if case_df_display.empty:
     st.warning("案件信息表为空")
 else: 
+    col_11, _, _, _ = st.columns(4)
+    with col_11:
+        # 在页面中添加批次ID的下拉框
+        batch_id = st.selectbox(
+            "批次ID",
+            options=case_df_display['批次ID'].unique(),
+            label_visibility="collapsed",
+            placeholder="选择批次ID",
+            index=0,
+        )
+    # 如选择了批次ID，则针对该批次ID进行筛选
+    if batch_id is not None:
+        case_df_display = case_df_display[case_df_display['批次ID'] == batch_id]
+        
     st.dataframe(case_df_display)
 
 xlsx_file = st.file_uploader("请上传案件信息Excel文件", type=["xlsx"])
 
-col_1, col_2, _, _ = st.columns(4)
+col_21, col_22, _, _ = st.columns(4)
 
-with col_1:
+with col_21:
     # 在页面中添加批次年份的下拉框
     batch_year = st.selectbox(
         "批次年份",
@@ -89,7 +103,7 @@ with col_1:
         index=(year_of_today-2024),
     )
 
-with col_2:
+with col_22:
     # 在页面中添加批次月份的下拉框
     batch_month = st.selectbox(
         "批次月份",
