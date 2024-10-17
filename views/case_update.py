@@ -76,7 +76,7 @@ def confirm_delete_cases(cases: list[Case]) -> None:
 
 all_batch_ids = get_all_batch_ids()
 
-status_df = load_status_list()
+case_status_df = load_status_list()
 
 if not all_batch_ids:
     st.warning("案件信息表为空")
@@ -112,7 +112,8 @@ columns_pairs = [
     ('province_city', '所属省/市'),
     ('court', '法院全称'),
     ('status_id', '状态序号'),
-    ('case_register_user_id', '立案负责人ID')
+    ('case_register_user_id', '立案负责人ID'),
+    ('case_register_id', '立案号')
 ]
     
 col_1, col_2 = st.columns([3, 1])
@@ -159,7 +160,7 @@ with col_1:
     # 如选择了批次ID，则针对该批次ID进行筛选
     if batch_id is not None:
         case_df = read_case_from_sql(batch_id)
-        case_df_display = get_case_df_display(case_df, status_df, columns_pairs)
+        case_df_display = get_case_df_display(case_df, case_status_df, columns_pairs)
 
     # 如输入了用户名，则针对该用户名进行筛选
     if user_name:
@@ -209,93 +210,103 @@ all_usernames = [user.username for user in all_users]
 # 右侧表单栏
 with col_2:
     if not multi_select:  # 单选
-        # 更新案件的表单
-        with st.form("case_update_form"):
-            st.subheader("案件详情")
-            
-            # 如为选择案件，则禁用表单输入
-            if case_selected is None:
-                disable_form_input = True
-            else:
-                disable_form_input = False
-            
-            st.text_input(
-                "姓名", 
-                value=full_name, 
-                disabled=True,
-            )
-
-            st.text_input(
-                "律师",
-                value=lawyer,
-                disabled=True,
-            )
-            
-            # 根据立案负责人ID，获取立案负责人在所有用户中的索引位置；如立案负责人ID为None，则设置索引位置为None
-            if case_register_user_id is None:
-                case_register_user_index = None
-            else:
-                case_register_user_index = all_usernames.index(get_user_by_id(case_register_user_id).username)
-            
-            # 如登录角色为员工(staff)，则不能更改立案负责人(即新立案负责人与原立案负责人相同)
-            if st.session_state.role == "staff":
-                new_user_id = case_register_user_id
-            else:
-                new_username = st.selectbox(
-                    "立案负责人",
-                    options=all_usernames,
-                    index=case_register_user_index,
-                    disabled=disable_form_input,
-                )
-                
-                # 立案负责人ID为None，则新立案负责人ID为None
-                # 否则，先通过新用户名确定其在所有用户名中的索引，然后通过其在所有用户名中的索引确定其ID
-                if case_register_user_id is None:
-                    new_user_id = None
-                else:
-                    new_user_id = all_users[all_usernames.index(new_username)].id
-            
-            # 如未选择案件或案件对象为空，则状态序号为None
-            # 否则，通过状态序号确定其状态名称，然后通过状态名称确定其状态序号 
-            if status_id is None:
-                status_index = None
-            else:
-                status_index = status_df['案件状态'].tolist().index(status_df.loc[status_id, '案件状态'])
-            
-            # 案件状态的下拉框
-            new_status = st.selectbox(
-                "案件状态",
-                options=status_df['案件状态'], 
-                index=status_index,
+        # 更新案件
+        st.subheader("案件详情")
+        
+        # 如为选择案件，则禁用表单输入
+        if case_selected is None:
+            disable_form_input = True
+        else:
+            disable_form_input = False
+        
+        st.text_input(
+            "姓名", 
+            value=full_name, 
+            disabled=True,
+        )
+        
+        # 根据立案负责人ID，获取立案负责人在所有用户中的索引位置；如立案负责人ID为None，则设置索引位置为None
+        if case_register_user_id is None:
+            case_register_user_index = None
+        else:
+            case_register_user_index = all_usernames.index(get_user_by_id(case_register_user_id).username)
+        
+        # 如登录角色为员工(staff)，则不能更改立案负责人(即新立案负责人与原立案负责人相同)
+        if st.session_state.role == "staff":
+            new_user_id = case_register_user_id
+        else:
+            new_username = st.selectbox(
+                "立案负责人",
+                options=all_usernames,
+                index=case_register_user_index,
                 disabled=disable_form_input,
             )
             
-            # 重置状态表的索引，以便通过“序号”列确定状态序号
-            status_df_reset_index = status_df.reset_index()
-            
-            # 如未选择案件或案件对象为空，则状态序号为None
-            # 否则，通过状态名称确定其状态序号
-            if status_id is None:
-                new_status_id = None
+            # 立案负责人ID为None，则新立案负责人ID为None
+            # 否则，先通过新用户名确定其在所有用户名中的索引，然后通过其在所有用户名中的索引确定其ID
+            if case_register_user_id is None:
+                new_user_id = None
             else:
-                new_status_id = int(status_df_reset_index[status_df_reset_index['案件状态'] == new_status]['序号'].tolist()[0])
-            
-            # 提交按钮
-            if st.form_submit_button(
-                "更新案件", 
-                use_container_width=True, 
-                type="primary",
-                disabled=update_button_disabled,
-            ):
-                # 更新案件，输入参数为案件ID、新立案负责人ID、新状态序号
-                session = Session()
-                update_case(session, case_selected.id, new_user_id, new_status_id)
-                session.commit()
-                session.close()
-                
-                logger.info(f"用户: {st.session_state.username} 把案件 {case_selected.id} 的状态从 {case_selected.status_id} 更新为 {new_status_id}")
+                new_user_id = all_users[all_usernames.index(new_username)].id
+        
+        unique_stage_list = case_status_df['案件阶段'].unique().tolist()
+        
+        # 如未选择案件或案件对象为空，则状态序号为None
+        # 否则，通过状态序号确定其状态名称，然后通过状态名称确定其状态序号 
+        if status_id is None:
+            status_index = None
+        else:
+            stage_index = unique_stage_list.index(case_status_df.loc[status_id, '案件阶段'])
                     
-                st.rerun()
+        # 案件阶段的下拉框
+        new_case_stage = st.selectbox(
+            "案件阶段",
+            options=unique_stage_list,
+            index=stage_index,
+            disabled=disable_form_input,
+        )
+        
+        current_status_list = case_status_df[case_status_df['案件阶段'] == new_case_stage]['案件状态'].tolist()
+        
+        if status_id is None:
+            status_index = None
+        else:
+            status_index = current_status_list.index(case_status_df.loc[status_id, '案件状态'])
+
+        # 案件状态的下拉框
+        new_case_status = st.selectbox(
+            "案件状态",
+            options=current_status_list, 
+            index=status_index,
+            disabled=disable_form_input,
+        )
+        
+        # 重置状态表的索引，以便通过“序号”列确定状态序号
+        status_df_reset_index = case_status_df.reset_index()
+        
+        # 如未选择案件或案件对象为空，则状态序号为None
+        # 否则，通过状态名称确定其状态序号
+        if status_id is None:
+            new_status_id = None
+        else:
+            new_status_id = int(status_df_reset_index[status_df_reset_index['案件状态'] == new_case_status]['序号'].tolist()[0])
+        
+        # 提交按钮
+        if st.button(
+            "更新案件", 
+            use_container_width=True, 
+            type="primary",
+            disabled=update_button_disabled,
+        ):
+            # 更新案件，输入参数为案件ID、新立案负责人ID、新状态序号
+            session = Session()
+            update_case(session, case_selected.id, new_user_id, new_status_id)
+            session.commit()
+            session.close()
+            
+            logger.info(f"用户: {st.session_state.username} 把案件 {case_selected.id} 的状态从 {case_selected.status_id} 更新为 {new_status_id}")
+                
+            st.rerun()
     else:  # 多选
         cases_selected = []
             
@@ -345,18 +356,18 @@ with col_2:
                 new_user_id = None
             
             # 案件状态的下拉框
-            new_status = st.selectbox(
+            new_case_status = st.selectbox(
                 "案件状态",
-                options=status_df['案件状态'], 
+                options=case_status_df['案件状态'], 
                 index=None,
             )
             
-            if new_status is not None:
+            if new_case_status is not None:
                 # 重置状态表的索引，以便通过“序号”列确定状态序号
-                status_df_reset_index = status_df.reset_index()
+                status_df_reset_index = case_status_df.reset_index()
                 
                 # 通过状态名称确定其状态序号
-                new_status_id = int(status_df_reset_index[status_df_reset_index['案件状态'] == new_status]['序号'].tolist()[0])
+                new_status_id = int(status_df_reset_index[status_df_reset_index['案件状态'] == new_case_status]['序号'].tolist()[0])
             else:
                 new_status_id = None
             

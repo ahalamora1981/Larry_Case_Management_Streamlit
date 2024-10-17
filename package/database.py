@@ -67,6 +67,7 @@ class Case(Base):
     court = Column(String)  # 法院全称
     status_id = Column(Integer, default=1)  # 状态序号
 
+    case_register_id = Column(String, default=None)  # 立案号
     case_register_user_id = Column(Integer, ForeignKey('users.id'), nullable=False)  # 立案负责人ID
     case_register_user = relationship("User", back_populates="cases", cascade="save-update")  # 立案负责人
 
@@ -178,6 +179,7 @@ def import_cases(xlsx_file: BytesIO, batch_id: str) -> str | None:
             court = row['法院全称'] if not pd.isna(row['法院全称']) else None,
             status_id = 1,
             case_register_user_id = 2,
+            case_register_id = None,
         )
         session.add(new_case)
         session.commit()
