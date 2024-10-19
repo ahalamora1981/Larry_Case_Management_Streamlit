@@ -265,3 +265,10 @@
 2024-10-19 13:06:56.686 | INFO     | __main__:ui_login:28 - 用户: admin 尝试登录
 2024-10-19 13:07:29.927 | INFO     | __main__:ui_login:28 - 用户: jun 尝试登录
 2024-10-19 13:16:39.974 | INFO     | __main__:ui_login:28 - 用户: admin 尝试登录
+2024-10-19 18:35:57.816 | INFO     | __main__:ui_login:28 - 用户: admin 尝试登录
+2024-10-19 18:38:38.099 | INFO     | __main__:ui_login:28 - 用户: stan 尝试登录
+2024-10-19 18:44:11.769 | INFO     | __main__:ui_login:28 - 用户: stan 尝试登录
+2024-10-19 18:53:21.525 | INFO     | __main__:ui_login:28 - 用户: stan 尝试登录
+2024-10-19 19:00:03.265 | INFO     | __main__:ui_login:28 - 用户: tao 尝试登录
+2024-10-19 19:01:12.134 | INFO     | views.case_update:case_update_staff_page:261 - 用户: tao 把案件 601 的状态从 1 更新为 6
+2024-10-19 19:01:18.259 | INFO     | views.case_update:case_update_staff_page:261 - 用户: tao 把案件 601 的状态从 6 更新为 6

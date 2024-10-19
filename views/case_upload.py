@@ -73,9 +73,10 @@ else:
         ('court', '法院全称'),
         ('status_id', '状态序号'),
         ('case_register_id', '立案号'),
-        ('case_register_datetime', '立案时间'),
+        ('case_register_date', '立案日期'),
         ('case_register_user_id', '立案负责人ID'),
-        ('case_print_user_id', '打印负责人ID')
+        ('case_print_user_id', '打印负责人ID'),
+        ('case_update_datetime', '案件更新时间')
     ]
 
     col_11, _, _, _ = st.columns(4)
@@ -84,7 +85,7 @@ else:
         # 在页面中添加批次ID的下拉框
         batch_id = st.selectbox(
             "批次ID",
-            options=all_batch_ids,
+            options=all_batch_ids[::-1],
             label_visibility="collapsed",
             placeholder="选择批次ID",
             index=0,

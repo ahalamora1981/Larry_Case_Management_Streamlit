@@ -68,13 +68,15 @@ class Case(Base):
     status_id = Column(Integer, default=1)  # 状态序号
 
     case_register_id = Column(String, default=None)  # 立案号
-    case_register_datetime = Column(DateTime, delault=None)  # 立案时间
+    case_register_date = Column(Date, default=None)  # 立案日期
     
     case_register_user_id = Column(Integer, ForeignKey('users.id'), nullable=False)  # 立案负责人ID
     case_print_user_id = Column(Integer, ForeignKey('users.id'), nullable=False)  # 打印负责人ID
     
     case_register_user = relationship("User", foreign_keys=[case_register_user_id], back_populates="register_cases")
     case_print_user = relationship("User", foreign_keys=[case_print_user_id], back_populates="print_cases")
+    
+    case_update_datetime = Column(DateTime, default=None)  # 立案日期
 
 
 class User(Base):
@@ -188,9 +190,10 @@ def import_cases(xlsx_file: BytesIO, batch_id: str) -> str | None:
             court = row['法院全称'] if not pd.isna(row['法院全称']) else None,
             status_id = 1,
             case_register_id = None,
-            case_register_datetime = None,
+            case_register_date = None,
             case_register_user_id = 2,
-            case_print_user_id = 2
+            case_print_user_id = 2,
+            case_update_datetime = None
         )
         session.add(new_case)
         session.commit()
@@ -225,7 +228,8 @@ def update_case(
     id: int, 
     register_user_id: int | None = None,
     print_user_id: int | None = None,
-    status_id: int | None = None
+    status_id: int | None = None,
+    case_register_date: Date | None = None
 ) -> None:
     this_case = session.query(Case).filter_by(id=str(id)).first()
     if register_user_id is not None:
@@ -234,6 +238,9 @@ def update_case(
         this_case.case_print_user_id = print_user_id
     if status_id is not None:
         this_case.status_id = status_id
+    if case_register_date is not None:
+        this_case.case_register_date = case_register_date
+    this_case.case_update_datetime = datetime.now()
 
 def delete_case_by_id(session: SessionClass, id: int | None) -> None:
     case_to_delete = session.query(Case).filter_by(id=id).first()

@@ -26,9 +26,9 @@ st.header("法诉案件管理系统")
 @st.dialog("确认更新案件")
 def confirm_update_cases(
     cases: list[Case], 
-    new_register_user_id: int | None, 
-    new_print_user_id: int | None,
-    new_status_id: int | None
+    new_register_user_id: int | None = None, 
+    new_print_user_id: int | None = None,
+    new_status_id: int | None = None
 ) -> None:
     col_1, col_2 = st.columns(2)
     with col_1:
@@ -114,8 +114,10 @@ columns_pairs = [
     ('court', '法院全称'),
     ('status_id', '状态序号'),
     ('case_register_id', '立案号'),
+    ('case_register_date', '立案日期'),
     ('case_register_user_id', '立案负责人ID'),
     ('case_print_user_id', '打印负责人ID'),
+    ('case_update_datetime', '案件更新时间')
 ]
     
 col_1, col_2 = st.columns([3, 1])
@@ -125,16 +127,10 @@ with col_1:
     col_11, col_12, col_13, col_14 = st.columns(4)
     
     with col_11:
-        multi_select = st.selectbox(
-            "是否多选", 
-            ['单选(案件更新)', '多选(批量更新或删除)'], 
-            index=0, 
-            key="multi_select",
-            placeholder="选择单选或多选",
-            label_visibility="collapsed",
-        )
-        
-        multi_select = True if multi_select == '多选(批量更新或删除)' else False
+        multi_select = st.toggle(
+                "批量处理",
+                key="multi_select",
+            )
         
         if multi_select:
             selection_mode = "multi-row"
@@ -145,7 +141,7 @@ with col_1:
         # 在页面中添加批次ID的下拉框
         batch_id = st.selectbox(
             "批次ID",
-            options=get_all_batch_ids(),
+            options=all_batch_ids[::-1],
             label_visibility="collapsed",
             placeholder="选择批次ID",
             index=0,
@@ -283,7 +279,7 @@ with col_2:
             session.commit()
             session.close()
             
-            logger.info(f"用户: {st.session_state.username} 把案件 {case_selected.id} 的状态从 {case_selected.status_id} 更新为 {new_status_id}")
+            logger.info(f"用户: {st.session_state.username} 把案件 {case_selected.id} 分配给 {new_register_username}")
                 
             st.rerun()
     else:  # 多选
@@ -342,40 +338,13 @@ with col_2:
         else:
             new_print_user_id = None
         
-        # 案件阶段的下拉框
-        new_case_stage = st.selectbox(
-            "新的案件阶段",
-            options=unique_stage_list,
-            index=None,
-            disabled=disable_form_input,
-        )
-        
-        current_status_list = case_status_df[case_status_df['案件阶段'] == new_case_stage]['案件状态'].tolist()
-        
-        # 案件状态的下拉框
-        new_case_status = st.selectbox(
-            "新的案件状态",
-            options=current_status_list, 
-            index=None,
-            disabled=disable_form_input,
-        )
-        
-        if new_case_status is not None:
-            # 重置状态表的索引，以便通过“序号”列确定状态序号
-            status_df_reset_index = case_status_df.reset_index()
-            
-            # 通过状态名称确定其状态序号
-            new_status_id = int(status_df_reset_index[status_df_reset_index['案件状态'] == new_case_status]['序号'].tolist()[0])
-        else:
-            new_status_id = None
-        
         if st.button(
             "更新所选案件",
             use_container_width=True,
             type="primary",
             disabled=update_button_disabled,
         ):
-            confirm_update_cases(cases_selected, new_register_user_id, new_print_user_id, new_status_id)
+            confirm_update_cases(cases_selected, new_register_user_id, new_print_user_id)
                 
         # 批量删除
         with st.form("cases_delete_form"):

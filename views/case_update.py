@@ -1,16 +1,15 @@
 # views/case_update.py
 import streamlit as st
 from loguru import logger
+from datetime import datetime
 
 from package.database import (
     Session,
     Case,
     get_case_by_id, 
-    get_all_users,
     get_all_batch_ids,
     read_case_from_sql, 
     update_case,
-    delete_case_by_id,
     load_status_list,
 )
 from package.utils import get_case_df_display
@@ -25,7 +24,8 @@ def case_update_staff_page(staff_type: str = None):
     @st.dialog("确认更新案件")
     def confirm_update_cases(
         cases: list[Case], 
-        new_status_id: int | None
+        new_status_id: int | None = None,
+        case_register_date: datetime | None = None
     ) -> None:
         col_1, col_2 = st.columns(2)
         with col_1:
@@ -43,32 +43,9 @@ def case_update_staff_page(staff_type: str = None):
                 update_case(
                     session, 
                     id=this_case.id, 
-                    status_id=new_status_id
+                    status_id=new_status_id,
+                    case_register_date=case_register_date,
                 )
-                # 更新进度条
-                progress_percentage = i / len(cases)
-                progress_bar.progress(progress_percentage, text=progress_text)
-            session.commit()
-            session.close()
-            st.rerun()
-                
-    # 确认弹窗
-    @st.dialog("确认删除案件")
-    def confirm_delete_cases(cases: list[Case]) -> None:
-        col_1, col_2 = st.columns(2)
-        with col_1:
-            confirm_btn = st.button("确认", use_container_width=True, type="primary")
-        with col_2:
-            if st.button("取消", use_container_width=True):
-                st.rerun()
-        if confirm_btn:
-            progress_text = "批量删除中..."
-            progress_percentage = 0
-            progress_bar = st.progress(progress_percentage, text=progress_text)
-            
-            session = Session()
-            for i, this_case in enumerate(cases):
-                delete_case_by_id(session, this_case.id)
                 # 更新进度条
                 progress_percentage = i / len(cases)
                 progress_bar.progress(progress_percentage, text=progress_text)
@@ -115,8 +92,10 @@ def case_update_staff_page(staff_type: str = None):
         ('court', '法院全称'),
         ('status_id', '状态序号'),
         ('case_register_id', '立案号'),
+        ('case_register_date', '立案日期'),
         ('case_register_user_id', '立案负责人ID'),
         ('case_print_user_id', '打印负责人ID'),
+        ('case_update_datetime', '案件更新时间')
     ]
         
     col_1, col_2 = st.columns([3, 1])
@@ -126,16 +105,10 @@ def case_update_staff_page(staff_type: str = None):
         col_11, col_12, col_13, col_14 = st.columns(4)
         
         with col_11:
-            multi_select = st.selectbox(
-                "是否多选", 
-                ['单选(案件更新)', '多选(批量更新或删除)'], 
-                index=0, 
+            multi_select = st.toggle(
+                "批量处理",
                 key="multi_select",
-                placeholder="选择单选或多选",
-                label_visibility="collapsed",
             )
-            
-            multi_select = True if multi_select == '多选(批量更新或删除)' else False
             
             if multi_select:
                 selection_mode = "multi-row"
@@ -146,7 +119,7 @@ def case_update_staff_page(staff_type: str = None):
             # 在页面中添加批次ID的下拉框
             batch_id = st.selectbox(
                 "批次ID",
-                options=get_all_batch_ids(),
+                options=all_batch_ids[::-1],
                 label_visibility="collapsed",
                 placeholder="选择批次ID",
                 index=0,
@@ -260,6 +233,15 @@ def case_update_staff_page(staff_type: str = None):
                 new_case_status_index = case_status_df['案件状态'].tolist().index(new_case_status)
                 new_status_id = case_status_df.index.tolist()[new_case_status_index]
             
+            if st.toggle("是否更新立案日期"):
+                case_register_date = st.date_input(
+                    "立案日期",
+                    value=datetime.now(),
+                    disabled=disable_form_input,
+                )
+            else:
+                case_register_date = None
+            
             # 提交按钮
             if st.button(
                 "更新案件", 
@@ -272,7 +254,8 @@ def case_update_staff_page(staff_type: str = None):
                 update_case(
                     session, 
                     id=case_selected.id, 
-                    status_id=new_status_id
+                    status_id=new_status_id,
+                    case_register_date=case_register_date,
                 )
                 session.commit()
                 session.close()
@@ -339,10 +322,19 @@ def case_update_staff_page(staff_type: str = None):
             else:
                 new_status_id = None
             
+            if st.toggle("是否更新立案日期"):
+                case_register_date = st.date_input(
+                    "立案日期",
+                    value=datetime.now(),
+                    disabled=disable_form_input,
+                )
+            else:
+                case_register_date = None
+                
             if st.button(
                 "更新所选案件",
                 use_container_width=True,
                 type="primary",
                 disabled=update_button_disabled,
             ):
-                confirm_update_cases(cases_selected, new_status_id)
+                confirm_update_cases(cases_selected, new_status_id, case_register_date)
