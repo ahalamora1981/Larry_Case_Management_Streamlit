@@ -4,7 +4,7 @@ import pandas as pd
 import streamlit as st
 from io import BytesIO
 from datetime import datetime
-from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, Float, Date, MetaData, Table, select, distinct, and_
+from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, Float, Date, DateTime,  distinct
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
 from sqlalchemy.orm import Session as SessionClass
@@ -68,8 +68,13 @@ class Case(Base):
     status_id = Column(Integer, default=1)  # 状态序号
 
     case_register_id = Column(String, default=None)  # 立案号
+    case_register_datetime = Column(DateTime, delault=None)  # 立案时间
+    
     case_register_user_id = Column(Integer, ForeignKey('users.id'), nullable=False)  # 立案负责人ID
-    case_register_user = relationship("User", back_populates="cases", cascade="save-update")  # 立案负责人
+    case_print_user_id = Column(Integer, ForeignKey('users.id'), nullable=False)  # 打印负责人ID
+    
+    case_register_user = relationship("User", foreign_keys=[case_register_user_id], back_populates="register_cases")
+    case_print_user = relationship("User", foreign_keys=[case_print_user_id], back_populates="print_cases")
 
 
 class User(Base):
@@ -80,7 +85,8 @@ class User(Base):
     password = Column(String)  # 密码
     role = Column(String)  # 角色
 
-    cases = relationship("Case", back_populates="case_register_user", cascade="save-update")
+    register_cases = relationship("Case", foreign_keys=[Case.case_register_user_id], back_populates="case_register_user")
+    print_cases = relationship("Case", foreign_keys=[Case.case_print_user_id], back_populates="case_print_user")
 
 
 # 创建所有定义的表
@@ -94,6 +100,9 @@ def load_status_list() -> pd.DataFrame:
         STATUS_FILE_PATH,
         index_col=0,
     )
+    
+    if df.shape[0] != df.案件状态.shape[0]:
+        raise ValueError("案件状态存在重复")
     
     return df
 
@@ -178,8 +187,10 @@ def import_cases(xlsx_file: BytesIO, batch_id: str) -> str | None:
             province_city = row['所属省/市'] if not pd.isna(row['所属省/市']) else None,
             court = row['法院全称'] if not pd.isna(row['法院全称']) else None,
             status_id = 1,
-            case_register_user_id = 2,
             case_register_id = None,
+            case_register_datetime = None,
+            case_register_user_id = 2,
+            case_print_user_id = 2
         )
         session.add(new_case)
         session.commit()
@@ -209,10 +220,18 @@ def get_case_by_batch_id(batch_id: str) -> list[Case]:
 
     return cases
 
-def update_case(session: SessionClass, id: int, user_id: int | None, status_id: int | None) -> None:
+def update_case(
+    session: SessionClass, 
+    id: int, 
+    register_user_id: int | None = None,
+    print_user_id: int | None = None,
+    status_id: int | None = None
+) -> None:
     this_case = session.query(Case).filter_by(id=str(id)).first()
-    if user_id is not None:
-        this_case.case_register_user_id = user_id
+    if register_user_id is not None:
+        this_case.case_register_user_id = register_user_id
+    if print_user_id is not None:
+        this_case.case_print_user_id = print_user_id
     if status_id is not None:
         this_case.status_id = status_id
 

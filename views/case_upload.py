@@ -72,8 +72,10 @@ else:
         ('province_city', '所属省/市'),
         ('court', '法院全称'),
         ('status_id', '状态序号'),
+        ('case_register_id', '立案号'),
+        ('case_register_datetime', '立案时间'),
         ('case_register_user_id', '立案负责人ID'),
-        ('case_register_id', '立案号')
+        ('case_print_user_id', '打印负责人ID')
     ]
 
     col_11, _, _, _ = st.columns(4)

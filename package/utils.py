@@ -46,22 +46,29 @@ def get_case_df_display(
     all_users_df = get_all_users_df()
     all_users_df.set_index('id', inplace=True)
 
-    # 在 case_df_to_display 中添加 '立案负责人' 、'案件阶段'、和 '案件状态' 列
-    for case_id, user_id, status_id in zip(case_df_display.index, case_df_display['立案负责人ID'], case_df_display['状态序号']):
-        case_df_display.loc[case_id, '立案负责人'] = all_users_df.loc[user_id, 'username']
+    # 在 case_df_to_display 中添加 '立案负责人' 、'打印负责人'、'案件阶段'、和 '案件状态' 列
+    for case_id, register_user_id, print_user_id, status_id in zip(
+        case_df_display.index, 
+        case_df_display['立案负责人ID'], 
+        case_df_display['打印负责人ID'],
+        case_df_display['状态序号']
+    ):
+        case_df_display.loc[case_id, '立案负责人'] = all_users_df.loc[register_user_id, 'username']
+        case_df_display.loc[case_id, '打印负责人'] = all_users_df.loc[print_user_id, 'username']
         case_df_display.loc[case_id, '案件阶段'] = status_df.loc[status_id, '案件阶段']
         case_df_display.loc[case_id, '案件状态'] = status_df.loc[status_id, '案件状态']
     
-    # 获取要插入的列索引（把“立案负责人”、“案件阶段”、“案件状态”放到前面）
+    # 获取要插入的列索引（把“立案负责人”、“打印负责人”、“案件阶段”、“案件状态”放到前面）
     index_to_insert = case_df_display.columns.tolist().index("身份证号码")
     
     # 将 '立案负责人' 、'案件阶段'、和 '案件状态' 列从df中弹出后插入到指定位置
     case_df_display.insert(index_to_insert, "案件状态", case_df_display.pop("案件状态"))
     case_df_display.insert(index_to_insert, "案件阶段", case_df_display.pop("案件阶段"))
+    case_df_display.insert(index_to_insert, "打印负责人", case_df_display.pop("打印负责人"))
     case_df_display.insert(index_to_insert, "立案负责人", case_df_display.pop("立案负责人"))
         
     # 将 '立案负责人ID' 和 '状态序号' 列删除
-    case_df_display = case_df_display.drop(columns=['立案负责人ID', '状态序号'])
+    case_df_display = case_df_display.drop(columns=['立案负责人ID', '打印负责人ID', '状态序号'])
     
     return case_df_display
 

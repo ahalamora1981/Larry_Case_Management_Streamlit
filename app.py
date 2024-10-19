@@ -40,17 +40,27 @@ def ui_main() -> None:
         page_icon=":memo:", 
     )
     
-    if st.session_state.role in ["admin", "manager"]:
+    if st.session_state.role == "admin":
         pg = st.navigation([
             st.Page(os.path.join(CWD, "views", "main_view.py"), title="案件统计"),
             st.Page(os.path.join(CWD, "views", "case_upload.py"), title="案件上传"),
-            st.Page(os.path.join(CWD, "views", "case_update.py"), title="案件更新"),
             st.Page(os.path.join(CWD, "views", "user_management.py"),  title="用户管理"),
         ])
-    else:
+    elif st.session_state.role == "manager":
         pg = st.navigation([
-            st.Page(os.path.join(CWD, "views", "case_update.py"), title="案件更新"),
+            st.Page(os.path.join(CWD, "views", "main_view.py"), title="案件统计"),
+            st.Page(os.path.join(CWD, "views", "case_upload.py"), title="案件上传"),
+            st.Page(os.path.join(CWD, "views", "case_assignment.py"), title="案件分配"),
+            st.Page(os.path.join(CWD, "views", "case_update_manager.py"), title="案件更新"),
+            st.Page(os.path.join(CWD, "views", "user_management.py"),  title="用户管理"),
         ])
+    elif st.session_state.role == "staff":
+        pg = st.navigation([
+            st.Page(os.path.join(CWD, "views", "case_update_register.py"), title="立案 - 案件更新"),
+            st.Page(os.path.join(CWD, "views", "case_update_print.py"), title="打印 - 案件更新"),
+        ])
+    else:
+        raise Exception("Invalid role")
         
     pg.run()
 
