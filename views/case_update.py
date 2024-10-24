@@ -15,7 +15,7 @@ from package.database import (
 from package.utils import get_case_df_display
 from views.sidebar import sidebar
 
-def case_update_staff_page(staff_type: str = None):
+def case_update_staff_page(user_type: str = None):
     sidebar("案件更新")
 
     st.header("法诉案件管理系统")
@@ -143,14 +143,14 @@ def case_update_staff_page(staff_type: str = None):
             case_df_display = case_df_display[case_df_display['用户名'] == user_name]
         
         # 根据登录用户名进行筛选
-        if staff_type == "register":
+        if user_type == "register":
             case_df_display = case_df_display[case_df_display['立案负责人'] == st.session_state.username]
-        elif staff_type == "print":
+        elif user_type == "print":
             case_df_display = case_df_display[case_df_display['打印负责人'] == st.session_state.username]
-        elif staff_type == "manager":
+        elif user_type == "manager":
             pass
         else:
-            raise ValueError("staff_type must be 'register', 'print' or 'manager'")
+            raise ValueError("user_type must be 'register', 'print' or 'manager'")
 
         index_selected = st.dataframe(
             case_df_display,
@@ -233,6 +233,14 @@ def case_update_staff_page(staff_type: str = None):
                 new_case_status_index = case_status_df['案件状态'].tolist().index(new_case_status)
                 new_status_id = case_status_df.index.tolist()[new_case_status_index]
             
+            if st.toggle("是否更新立案号"):
+                case_register_id = st.text_input(
+                    "立案号",
+                    disabled=disable_form_input,
+                )
+            else:
+                case_register_id = None
+
             if st.toggle("是否更新立案日期"):
                 case_register_date = st.date_input(
                     "立案日期",
@@ -255,6 +263,7 @@ def case_update_staff_page(staff_type: str = None):
                     session, 
                     id=case_selected.id, 
                     status_id=new_status_id,
+                    case_register_id=case_register_id,
                     case_register_date=case_register_date,
                 )
                 session.commit()

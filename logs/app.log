@@ -272,3 +272,6 @@
 2024-10-19 19:00:03.265 | INFO     | __main__:ui_login:28 - 用户: tao 尝试登录
 2024-10-19 19:01:12.134 | INFO     | views.case_update:case_update_staff_page:261 - 用户: tao 把案件 601 的状态从 1 更新为 6
 2024-10-19 19:01:18.259 | INFO     | views.case_update:case_update_staff_page:261 - 用户: tao 把案件 601 的状态从 6 更新为 6
+2024-10-23 10:55:16.075 | INFO     | __main__:ui_login:28 - 用户: admin 尝试登录
+2024-10-23 10:55:26.772 | INFO     | __main__:ui_login:28 - 用户: stan 尝试登录
+2024-10-23 15:42:12.941 | INFO     | __main__:ui_login:28 - 用户: stan 尝试登录

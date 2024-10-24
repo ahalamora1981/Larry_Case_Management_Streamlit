@@ -229,6 +229,7 @@ def update_case(
     register_user_id: int | None = None,
     print_user_id: int | None = None,
     status_id: int | None = None,
+    case_register_id: str | None = None,
     case_register_date: Date | None = None
 ) -> None:
     this_case = session.query(Case).filter_by(id=str(id)).first()
@@ -238,6 +239,8 @@ def update_case(
         this_case.case_print_user_id = print_user_id
     if status_id is not None:
         this_case.status_id = status_id
+    if case_register_id is not None:
+        this_case.case_register_id = case_register_id
     if case_register_date is not None:
         this_case.case_register_date = case_register_date
     this_case.case_update_datetime = datetime.now()
