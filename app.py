@@ -51,7 +51,8 @@ def ui_main() -> None:
             st.Page(os.path.join(CWD, "views", "main_view.py"), title="案件统计"),
             st.Page(os.path.join(CWD, "views", "case_upload.py"), title="案件上传"),
             st.Page(os.path.join(CWD, "views", "case_assignment.py"), title="案件管理"),
-            st.Page(os.path.join(CWD, "views", "case_update_manager.py"), title="案件更新"),
+            st.Page(os.path.join(CWD, "views", "case_update_manager.py"), title="案件更新 - 手动更新"),
+            st.Page(os.path.join(CWD, "views", "case_update_manager.py"), title="案件更新 - 上传文件更新"),
             st.Page(os.path.join(CWD, "views", "user_management.py"),  title="用户管理"),
         ])
     elif st.session_state.role == "staff":
