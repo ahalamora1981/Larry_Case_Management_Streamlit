@@ -69,6 +69,7 @@ class Case(Base):
 
     case_register_id = Column(String, default=None)  # 立案号
     case_register_date = Column(Date, default=None)  # 立案日期
+    court_session_open_date = Column(Date, default=None)  # 开庭日期
     
     case_register_user_id = Column(Integer, ForeignKey('users.id'), nullable=False)  # 立案负责人ID
     case_print_user_id = Column(Integer, ForeignKey('users.id'), nullable=False)  # 打印负责人ID
@@ -191,6 +192,7 @@ def import_cases(xlsx_file: BytesIO, batch_id: str) -> str | None:
             status_id = 1,
             case_register_id = None,
             case_register_date = None,
+            court_session_open_date = None,
             case_register_user_id = 2,
             case_print_user_id = 2,
             case_update_datetime = None

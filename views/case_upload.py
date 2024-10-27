@@ -25,7 +25,7 @@ today = datetime.now()
 year_of_today = today.year
 month_of_today = today.month
 
-status_df = load_status_list()
+case_status_df = load_status_list()
 
 if not all_batch_ids:
     st.warning("案件信息表为空")
@@ -74,6 +74,7 @@ else:
         ('status_id', '状态序号'),
         ('case_register_id', '立案号'),
         ('case_register_date', '立案日期'),
+        ('court_session_open_date', '开庭日期'),
         ('case_register_user_id', '立案负责人ID'),
         ('case_print_user_id', '打印负责人ID'),
         ('case_update_datetime', '案件更新时间')
@@ -94,7 +95,7 @@ else:
     # 如选择了批次ID，则针对该批次ID进行筛选
     if batch_id is not None:
         case_df = read_case_from_sql(batch_id)
-        case_df_display = get_case_df_display(case_df, status_df, columns_pairs)
+        case_df_display = get_case_df_display(case_df, case_status_df, columns_pairs)
         
     st.dataframe(case_df_display)
 

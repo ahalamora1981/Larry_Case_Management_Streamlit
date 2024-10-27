@@ -76,7 +76,12 @@ def confirm_delete_cases(cases: list[Case]) -> None:
         st.rerun()
 
 all_batch_ids = get_all_batch_ids()
+all_batch_ids.sort(key=lambda x: int(x.split('-')[1]),reverse=True)
+all_batch_ids.sort(key=lambda x: int(x.split('-')[0]),reverse=True)
+
 case_status_df = load_status_list()
+status_to_id = {df[1]['案件状态']: df[0] for df in case_status_df.iterrows()}
+id_to_status = {df[0]: df[1]['案件状态'] for df in case_status_df.iterrows()}
 unique_stage_list = case_status_df['案件阶段'].unique().tolist()
 
 if not all_batch_ids:
@@ -115,55 +120,103 @@ columns_pairs = [
     ('status_id', '状态序号'),
     ('case_register_id', '立案号'),
     ('case_register_date', '立案日期'),
+    ('court_session_open_date', '开庭日期'),
     ('case_register_user_id', '立案负责人ID'),
     ('case_print_user_id', '打印负责人ID'),
     ('case_update_datetime', '案件更新时间')
 ]
     
-col_1, col_2 = st.columns([3, 1])
+
+col_11, col_12, col_13, col_14, col_15, col_16 = st.columns(6)
+
+with col_11:
+    multi_selection = st.toggle(
+            "批量处理",
+            key="selection",
+        )
+    
+    if not multi_selection:
+        selection_mode = "single-row"
+    else:
+        selection_mode = "multi-row"
+
+with col_12:
+    # 在页面中添加批次ID的下拉框
+    batch_id_selected = st.selectbox(
+        "批次ID",
+        options=all_batch_ids,
+        label_visibility="collapsed",
+        placeholder="选择批次ID",
+        index=0,
+    )
+
+with col_13:
+    # 在页面中添加用户名的输入框
+    user_name_selected= st.text_input(
+        "用户名",
+        value=None,
+        label_visibility="collapsed",
+        placeholder="输入用户名",
+    )
+
+# 如选择了批次ID，则针对该批次ID进行筛选
+if batch_id_selected is not None:
+    case_df = read_case_from_sql(batch_id_selected)
+    
+lawyer_list = case_df['lawyer'].unique().tolist()
+lawyer_list.remove(None)
+
+with col_14:
+    # 在页面中添加律师的输入框
+    lawyer_selected = st.selectbox(
+        "承办律师",
+        lawyer_list,
+        label_visibility="collapsed",
+        placeholder="选择律师",
+        index=None
+    )
+
+with col_15:
+    # 在页面中添加法院的下拉框
+    court_selected = st.text_input(
+        "法院",
+        value=None,
+        label_visibility="collapsed",
+        placeholder="选择法院",
+    )
+    
+with col_16:
+    # 在页面中添加案件状态的输入框
+    status_selected = st.selectbox(
+        "案件状态",
+        options=case_status_df['案件状态'].tolist(),
+        label_visibility="collapsed",
+        placeholder="选择案件状态",
+        index=None
+    )
+
+# 如选择了用户名，则针对该用户名进行筛选
+if user_name_selected:
+    case_df = case_df[case_df['user_id'].str.contains(user_name_selected, case=False, na=False)]
+
+# 如选择了律师，则针对该律师进行筛选
+if lawyer_selected:
+    case_df = case_df[case_df['lawyer'].str.contains(lawyer_selected, case=False, na=False)]
+
+# 如选择了法院，则针对该法院进行筛选
+if court_selected:
+    case_df = case_df[case_df['court'].str.contains(court_selected, case=False, na=False)]
+
+# 如选择了案件状态，则针对该案件状态进行筛选
+if status_selected:
+    case_df = case_df[case_df['status_id'] == status_to_id[status_selected]]
+    
+case_df_display = get_case_df_display(case_df, case_status_df, columns_pairs)
+
+col_21, col_22 = st.columns([3, 1])
 
 # 左侧信息栏
-with col_1:
-    col_11, col_12, col_13, col_14 = st.columns(4)
-    
-    with col_11:
-        multi_select = st.toggle(
-                "批量处理",
-                key="multi_select",
-            )
-        
-        if multi_select:
-            selection_mode = "multi-row"
-        else:
-            selection_mode = "single-row"
-    
-    with col_12:
-        # 在页面中添加批次ID的下拉框
-        batch_id = st.selectbox(
-            "批次ID",
-            options=all_batch_ids[::-1],
-            label_visibility="collapsed",
-            placeholder="选择批次ID",
-            index=0,
-        )
-    
-    with col_13:
-        # 在页面中添加用户名的输入框
-        user_name = st.text_input(
-            "用户名",
-            label_visibility="collapsed",
-            placeholder="输入用户名",
-        )
-        
-    # 如选择了批次ID，则针对该批次ID进行筛选
-    if batch_id is not None:
-        case_df = read_case_from_sql(batch_id)
-        case_df_display = get_case_df_display(case_df, case_status_df, columns_pairs)
-
-    # 如输入了用户名，则针对该用户名进行筛选
-    if user_name:
-        case_df_display = case_df_display[case_df_display['用户名'] == user_name]
-    
+with col_21:
     index_selected = st.dataframe(
         case_df_display,
         on_select="rerun",  # 选择行时重新运行页面
@@ -171,6 +224,7 @@ with col_1:
         use_container_width=True,
         hide_index=True,  # 隐藏索引号
     )
+    st.write(f"案件数量：{len(case_df_display)}")
 
 id_selected = None
 case_selected = None
@@ -204,8 +258,8 @@ all_users = [user for user in get_all_users() if user.username != "admin"]
 all_usernames = [user.username for user in all_users]
 
 # 右侧表单栏
-with col_2:
-    if not multi_select:  # 单选
+with col_22:
+    if not multi_selection:  # 单选
         # 更新案件
         st.subheader("案件详情")
         
