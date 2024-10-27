@@ -164,7 +164,9 @@ if batch_id_selected is not None:
     case_df = read_case_from_sql(batch_id_selected)
     
 lawyer_list = case_df['lawyer'].unique().tolist()
-lawyer_list.remove(None)
+
+if None in lawyer_list:
+    lawyer_list.remove(None)
 
 with col_14:
     # 在页面中添加律师的输入框

@@ -205,6 +205,62 @@ def import_cases(xlsx_file: BytesIO, batch_id: str) -> str | None:
         progress_bar.progress(progress_percentage, text=progress_text)
             
     session.close()
+    
+def update_cases(xlsx_file: BytesIO, batch_id: str) -> str | None:
+    case_status_df = load_status_list()    
+    status_to_id = {df[1]['案件状态']: df[0] for df in case_status_df.iterrows()}
+    id_to_status = {df[0]: df[1]['案件状态'] for df in case_status_df.iterrows()}
+    
+    progress_text = "案件导入中..."
+    progress_percentage = 0
+    progress_bar = st.progress(progress_percentage, text=progress_text)
+
+    session = Session()
+
+    # 从 Excel 文件中读取数据
+    df = pd.read_excel(xlsx_file, dtype=str)
+
+    for _, row in df.iterrows():
+        case_selected = session.query(Case).filter_by(
+            user_name = row['用户名']
+        ).filter_by(
+            list_id = row['列表ID']
+        ).first()
+        
+        print("##################\n")
+        print(status_to_id[row['案件状态']])
+        print(type(status_to_id[row['案件状态']]))
+        print("\n##################")
+
+        if case_selected is None:
+            return f"【错误】 - 用户名: {row['用户名']} - 列表ID: {row['列表ID']} 不存在"
+        
+        if case_selected.batch_id != batch_id:
+            return f"【错误】 - 用户名: {row['用户名']} - 列表ID: {row['列表ID']} 不属于批次: {batch_id}"
+            
+        # 更新案件
+        case_selected.shou_bie = row['手别'] if not pd.isna(row['手别']) else None
+        case_selected.user_name = row['用户名'] if not pd.isna(row['用户名']) else None
+        case_selected.full_name = row['用户姓名'] if not pd.isna(row['用户姓名']) else None
+        case_selected.list_id = row['列表ID'] if not pd.isna(row['列表ID']) else None
+        case_selected.outstanding_principal = float(row['待还本金']) if not pd.isna(row['待还本金']) else None
+        case_selected.law_firm = row['承办律所'] if not pd.isna(row['承办律所']) else None
+        case_selected.lawyer = row['承办律师'] if not pd.isna(row['承办律师']) else None
+        case_selected.province_city = row['所属省/市'] if not pd.isna(row['所属省/市']) else None
+        case_selected.court = row['法院全称'] if not pd.isna(row['法院全称']) else None
+        case_selected.status_id = status_to_id[row['案件状态']] if not pd.isna(row['案件状态']) else None
+        case_selected.case_register_id = row['立案号'] if not pd.isna(row['立案号']) else None
+        case_selected.case_register_date = datetime.strptime(row['立案日期'], "%Y-%m-%d").date() if not pd.isna(row['立案日期']) else None
+        case_selected.court_session_open_date = datetime.strptime(row['开庭日期'], "%Y-%m-%d").date() if not pd.isna(row['开庭日期']) else None
+        case_selected.case_update_datetime = datetime.now()
+
+        session.commit()
+        
+        # 更新进度条
+        progress_percentage += (1 / df.shape[0])
+        progress_bar.progress(progress_percentage, text=progress_text)
+            
+    session.close()
 
 def get_all_cases() -> list[Case]:
     session = Session()

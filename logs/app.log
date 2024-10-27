@@ -279,3 +279,35 @@
 2024-10-26 17:14:48.467 | INFO     | __main__:ui_login:28 - 用户: stan 尝试登录
 2024-10-26 17:15:47.131 | INFO     | __main__:ui_login:28 - 用户: admin 尝试登录
 2024-10-27 09:05:23.421 | INFO     | __main__:ui_login:28 - 用户: stan 尝试登录
+2024-10-27 11:13:35.653 | INFO     | __main__:ui_login:28 - 用户: admin 尝试登录
+2024-10-27 11:13:41.791 | INFO     | __main__:ui_login:28 - 用户: stan 尝试登录
+2024-10-27 14:45:29.425 | ERROR    | __page__:<module>:97 - (builtins.TypeError) float() argument must be a string or a real number, not 'tuple'
+[SQL: UPDATE cases SET shou_bie=?, user_name=?, full_name=?, list_id=?, outstanding_principal=?, law_firm=?, lawyer=?, province_city=?, court=?, status_id=?, case_register_id=?, case_register_date=?, court_session_open_date=?, case_update_datetime=? WHERE cases.id = ?]
+[parameters: [{'case_register_date': (None,), 'court_session_open_date': (None,), 'case_register_id': (None,), 'outstanding_principal': (9162.96,), 'lawyer': ('张林', ... (150 characters truncated) ... 安徽省怀远县人民法院',), 'status_id': (13,), 'shou_bie': ('4手',), 'case_update_datetime': datetime.datetime(2024, 10, 27, 14, 45, 29, 422160), 'cases_id': 1440}]]
+2024-10-27 14:48:23.786 | ERROR    | __page__:<module>:97 - (builtins.TypeError) float() argument must be a string or a real number, not 'tuple'
+[SQL: UPDATE cases SET shou_bie=?, user_name=?, full_name=?, list_id=?, outstanding_principal=?, law_firm=?, lawyer=?, province_city=?, court=?, status_id=?, case_register_id=?, case_register_date=?, court_session_open_date=?, case_update_datetime=? WHERE cases.id = ?]
+[parameters: [{'case_register_date': (None,), 'court_session_open_date': (None,), 'case_register_id': (None,), 'outstanding_principal': (9162.96,), 'lawyer': ('张林', ... (150 characters truncated) ... 安徽省怀远县人民法院',), 'status_id': (13,), 'shou_bie': ('4手',), 'case_update_datetime': datetime.datetime(2024, 10, 27, 14, 48, 23, 783842), 'cases_id': 1440}]]
+2024-10-27 14:49:14.767 | ERROR    | __page__:<module>:97 - (builtins.TypeError) float() argument must be a string or a real number, not 'tuple'
+[SQL: UPDATE cases SET shou_bie=?, user_name=?, full_name=?, list_id=?, outstanding_principal=?, law_firm=?, lawyer=?, province_city=?, court=?, status_id=?, case_register_id=?, case_register_date=?, court_session_open_date=?, case_update_datetime=? WHERE cases.id = ?]
+[parameters: [{'case_register_date': (None,), 'court_session_open_date': (None,), 'case_register_id': (None,), 'outstanding_principal': (9162.96,), 'lawyer': ('张林', ... (150 characters truncated) ... 安徽省怀远县人民法院',), 'status_id': (13,), 'shou_bie': ('4手',), 'case_update_datetime': datetime.datetime(2024, 10, 27, 14, 49, 14, 764624), 'cases_id': 1440}]]
+2024-10-27 14:50:04.941 | ERROR    | __page__:<module>:97 - can only concatenate str (not "Case") to str
+2024-10-27 14:50:22.106 | ERROR    | __page__:<module>:97 - (builtins.TypeError) float() argument must be a string or a real number, not 'tuple'
+[SQL: UPDATE cases SET shou_bie=?, user_name=?, full_name=?, list_id=?, outstanding_principal=?, law_firm=?, lawyer=?, province_city=?, court=?, status_id=?, case_register_id=?, case_register_date=?, court_session_open_date=?, case_update_datetime=? WHERE cases.id = ?]
+[parameters: [{'case_register_date': (None,), 'court_session_open_date': (None,), 'case_register_id': (None,), 'outstanding_principal': (9162.96,), 'lawyer': ('张林', ... (150 characters truncated) ... 安徽省怀远县人民法院',), 'status_id': (13,), 'shou_bie': ('4手',), 'case_update_datetime': datetime.datetime(2024, 10, 27, 14, 50, 22, 105851), 'cases_id': 1440}]]
+2024-10-27 14:52:21.682 | ERROR    | __page__:<module>:97 - 'str' object has no attribute 'value'
+2024-10-27 14:52:38.846 | ERROR    | __page__:<module>:97 - (builtins.TypeError) float() argument must be a string or a real number, not 'tuple'
+[SQL: UPDATE cases SET shou_bie=?, user_name=?, full_name=?, list_id=?, outstanding_principal=?, law_firm=?, lawyer=?, province_city=?, court=?, status_id=?, case_register_id=?, case_register_date=?, court_session_open_date=?, case_update_datetime=? WHERE cases.id = ?]
+[parameters: [{'case_register_date': (None,), 'court_session_open_date': (None,), 'case_register_id': (None,), 'outstanding_principal': (9162.96,), 'lawyer': ('张林', ... (150 characters truncated) ... 安徽省怀远县人民法院',), 'status_id': (13,), 'shou_bie': ('4手',), 'case_update_datetime': datetime.datetime(2024, 10, 27, 14, 52, 38, 843962), 'cases_id': 1440}]]
+2024-10-27 14:53:57.617 | ERROR    | __page__:<module>:97 - strptime() argument 1 must be str, not float
+2024-10-27 14:55:38.125 | ERROR    | __page__:<module>:97 - strptime() argument 1 must be str, not float
+2024-10-27 14:55:57.103 | ERROR    | __page__:<module>:97 - 'str' object has no attribute 'value'
+2024-10-27 14:56:16.422 | ERROR    | __page__:<module>:97 - 'str' object has no attribute 'value'
+2024-10-27 14:56:53.769 | ERROR    | __page__:<module>:97 - (builtins.TypeError) float() argument must be a string or a real number, not 'tuple'
+[SQL: UPDATE cases SET shou_bie=?, user_name=?, full_name=?, list_id=?, outstanding_principal=?, law_firm=?, lawyer=?, province_city=?, court=?, status_id=?, case_register_id=?, case_register_date=?, court_session_open_date=?, case_update_datetime=? WHERE cases.id = ?]
+[parameters: [{'case_register_date': (None,), 'court_session_open_date': (None,), 'case_register_id': (None,), 'outstanding_principal': (9162.96,), 'lawyer': ('张林', ... (150 characters truncated) ... 安徽省怀远县人民法院',), 'status_id': (13,), 'shou_bie': ('4手',), 'case_update_datetime': datetime.datetime(2024, 10, 27, 14, 56, 53, 767657), 'cases_id': 1440}]]
+2024-10-27 14:57:26.044 | ERROR    | __page__:<module>:97 - (builtins.TypeError) float() argument must be a string or a real number, not 'tuple'
+[SQL: UPDATE cases SET shou_bie=?, user_name=?, full_name=?, list_id=?, outstanding_principal=?, law_firm=?, lawyer=?, province_city=?, court=?, status_id=?, case_register_id=?, case_register_date=?, court_session_open_date=?, case_update_datetime=? WHERE cases.id = ?]
+[parameters: [{'case_register_date': (None,), 'court_session_open_date': (None,), 'case_register_id': (None,), 'outstanding_principal': (9162.96,), 'lawyer': ('张林', ... (149 characters truncated) ... '安徽省怀远县人民法院',), 'status_id': (13,), 'shou_bie': ('4手',), 'case_update_datetime': datetime.datetime(2024, 10, 27, 14, 57, 26, 40891), 'cases_id': 1440}]]
+2024-10-27 15:02:44.084 | ERROR    | __page__:<module>:97 - (builtins.TypeError) float() argument must be a string or a real number, not 'tuple'
+[SQL: UPDATE cases SET shou_bie=?, user_name=?, full_name=?, list_id=?, outstanding_principal=?, law_firm=?, lawyer=?, province_city=?, court=?, status_id=?, case_register_id=?, case_register_date=?, court_session_open_date=?, case_update_datetime=? WHERE cases.id = ?]
+[parameters: [{'case_register_date': (None,), 'court_session_open_date': (None,), 'case_register_id': (None,), 'outstanding_principal': (9162.96,), 'lawyer': ('张林', ... (148 characters truncated) ... ('安徽省怀远县人民法院',), 'status_id': (13,), 'shou_bie': ('4手',), 'case_update_datetime': datetime.datetime(2024, 10, 27, 15, 2, 44, 81667), 'cases_id': 1440}]]
