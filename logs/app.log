@@ -311,3 +311,20 @@
 2024-10-27 15:02:44.084 | ERROR    | __page__:<module>:97 - (builtins.TypeError) float() argument must be a string or a real number, not 'tuple'
 [SQL: UPDATE cases SET shou_bie=?, user_name=?, full_name=?, list_id=?, outstanding_principal=?, law_firm=?, lawyer=?, province_city=?, court=?, status_id=?, case_register_id=?, case_register_date=?, court_session_open_date=?, case_update_datetime=? WHERE cases.id = ?]
 [parameters: [{'case_register_date': (None,), 'court_session_open_date': (None,), 'case_register_id': (None,), 'outstanding_principal': (9162.96,), 'lawyer': ('张林', ... (148 characters truncated) ... ('安徽省怀远县人民法院',), 'status_id': (13,), 'shou_bie': ('4手',), 'case_update_datetime': datetime.datetime(2024, 10, 27, 15, 2, 44, 81667), 'cases_id': 1440}]]
+2024-10-28 10:07:28.176 | INFO     | __main__:ui_login:29 - 用户: stan 尝试登录
+2024-10-28 10:24:01.396 | INFO     | __main__:ui_login:29 - 用户: tao 尝试登录
+2024-10-28 10:24:26.184 | INFO     | __main__:ui_login:29 - 用户: stan 尝试登录
+2024-10-28 10:24:41.754 | INFO     | __main__:ui_login:29 - 用户: tao 尝试登录
+2024-10-28 10:24:52.825 | INFO     | __main__:ui_login:29 - 用户: tao 尝试登录
+2024-10-28 10:25:28.779 | INFO     | __main__:ui_login:29 - 用户: stan 尝试登录
+2024-10-28 10:28:47.082 | INFO     | __main__:ui_login:29 - 用户: jun 尝试登录
+2024-10-28 10:31:36.326 | INFO     | __main__:ui_login:29 - 用户: stan 尝试登录
+2024-10-28 10:33:44.053 | INFO     | __main__:ui_login:29 - 用户: stan 尝试登录
+2024-10-28 10:33:57.363 | INFO     | __main__:ui_login:29 - 用户: tao 尝试登录
+2024-10-28 10:35:05.742 | INFO     | __main__:ui_login:29 - 用户: stan 尝试登录
+2024-10-28 10:36:35.022 | INFO     | __main__:ui_login:29 - 用户: tao 尝试登录
+2024-10-28 10:36:44.748 | INFO     | __main__:ui_login:29 - 用户: stan 尝试登录
+2024-10-28 10:46:31.685 | INFO     | __main__:ui_login:29 - 用户: tao 尝试登录
+2024-10-28 10:46:38.616 | INFO     | __main__:ui_login:29 - 用户: admin 尝试登录
+2024-10-28 10:48:50.394 | INFO     | __main__:ui_login:29 - 用户: stan 尝试登录
+2024-10-28 10:49:02.484 | INFO     | __main__:ui_login:29 - 用户: admin 尝试登录

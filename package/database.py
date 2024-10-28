@@ -359,6 +359,30 @@ def delete_user(id: int) -> None:
     session.commit()
     session.close()
 
+def reset_username(id: int, username: str) -> None:
+    session = Session()
+    user_with_username = session.query(User).filter_by(username=username).first()
+            
+    if user_with_username is None:
+        user = session.query(User).filter_by(id=id).first()
+        user.username = username
+        session.commit()
+        session.close()
+    elif user_with_username.username == username:
+        session.commit()
+        session.close()
+    else:
+        session.commit()
+        session.close()
+        raise Exception(f"【错误】用户 {username} 已存在")
+
+def reset_role(id: int, role: str) -> None:
+    session = Session()
+    user = session.query(User).filter_by(id=id).first()
+    user.role = role
+    session.commit()
+    session.close()
+
 def reset_password(id: int, hashed_password: str) -> None:
     session = Session()
     user = session.query(User).filter_by(id=id).first()

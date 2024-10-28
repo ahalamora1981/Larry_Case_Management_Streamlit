@@ -16,10 +16,6 @@ from package.utils import get_case_df_display
 from views.sidebar import sidebar
 
 def case_update_staff_page(user_type: str = None):
-    sidebar("案件更新")
-
-    st.header("法诉案件管理系统")
-
     # 更新确认弹窗
     @st.dialog("确认更新案件")
     def confirm_update_cases(
@@ -181,7 +177,7 @@ def case_update_staff_page(user_type: str = None):
 
     # 如选择了用户名，则针对该用户名进行筛选
     if user_name_selected:
-        case_df = case_df[case_df['user_id'].str.contains(user_name_selected, case=False, na=False)]
+        case_df = case_df[case_df['user_name'].str.contains(user_name_selected, case=False, na=False)]
     
     # 如选择了律师，则针对该律师进行筛选
     if lawyer_selected:
@@ -198,10 +194,8 @@ def case_update_staff_page(user_type: str = None):
     # 根据登录用户名进行筛选
     if user_type == "register":
         case_df = case_df[case_df['case_register_user_id'] == st.session_state.user_id]
-        case_df_display = case_df_display[case_df_display['立案负责人'] == st.session_state.username]
     elif user_type == "print":
         case_df = case_df[case_df['case_print_user_id'] == st.session_state.user_id]
-        case_df_display = case_df_display[case_df_display['打印负责人'] == st.session_state.username]
     elif user_type == "manager":
         pass
     else:

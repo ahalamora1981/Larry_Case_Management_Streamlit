@@ -18,9 +18,9 @@ from package.utils import get_case_df_display
 from views.sidebar import sidebar
 
 
-sidebar("案件更新")
+sidebar("案件分配")
 
-st.header("法诉案件管理系统")
+st.header("法诉案件管理系统 | 案件分配")
 
 # 更新确认弹窗
 @st.dialog("确认更新案件")
@@ -199,7 +199,7 @@ with col_16:
 
 # 如选择了用户名，则针对该用户名进行筛选
 if user_name_selected:
-    case_df = case_df[case_df['user_id'].str.contains(user_name_selected, case=False, na=False)]
+    case_df = case_df[case_df['user_name'].str.contains(user_name_selected, case=False, na=False)]
 
 # 如选择了律师，则针对该律师进行筛选
 if lawyer_selected:

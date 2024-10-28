@@ -14,7 +14,7 @@ from views.sidebar import sidebar
 
 sidebar("案件上传")
 
-st.header("法诉案件管理系统")
+st.header("法诉案件管理系统 | 案件上传")
 
 all_batch_ids = get_all_batch_ids()
 

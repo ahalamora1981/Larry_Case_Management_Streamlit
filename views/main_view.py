@@ -6,7 +6,7 @@ from package.database import get_case_by_batch_id, get_all_cases
 
 sidebar("案件统计")
 
-st.header("法诉案件管理系统")
+st.header("法诉案件管理系统 | 案件统计")
 
 year = date.today().year
 month = date.today().month

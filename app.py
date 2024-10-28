@@ -24,6 +24,7 @@ def ui_login() -> None:
                 if user.password == hash_password(password):
                     st.session_state.logged_in = True
                     st.session_state.username = username
+                    st.session_state.user_id = user.id
                     st.session_state.role = user.role
                     logger.info(f"用户: {username} 尝试登录")
                     st.rerun()
@@ -50,9 +51,9 @@ def ui_main() -> None:
         pg = st.navigation([
             st.Page(os.path.join(CWD, "views", "main_view.py"), title="案件统计"),
             st.Page(os.path.join(CWD, "views", "case_upload.py"), title="案件上传"),
-            st.Page(os.path.join(CWD, "views", "case_assignment.py"), title="案件管理"),
-            st.Page(os.path.join(CWD, "views", "case_update_manager_manual.py"), title="案件更新 - 手动更新"),
-            st.Page(os.path.join(CWD, "views", "case_update_manager_file.py"), title="案件更新 - 文件更新"),
+            st.Page(os.path.join(CWD, "views", "case_assignment.py"), title="案件分配"),
+            st.Page(os.path.join(CWD, "views", "case_update_manager_manual.py"), title="案件更新 | 手动更新"),
+            st.Page(os.path.join(CWD, "views", "case_update_manager_file.py"), title="案件更新 | 文件更新"),
             st.Page(os.path.join(CWD, "views", "user_management.py"),  title="用户管理"),
         ])
     elif st.session_state.role == "staff":

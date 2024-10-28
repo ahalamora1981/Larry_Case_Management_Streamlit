@@ -7,6 +7,8 @@ from package.database import (
     add_user,
     delete_user,
     reset_password,
+    reset_username,
+    reset_role,
 )
 from package.utils import hash_password
 from views.sidebar import sidebar
@@ -14,7 +16,7 @@ from views.sidebar import sidebar
 
 sidebar("用户管理")
 
-st.header("法诉案件管理系统")
+st.header("法诉案件管理系统 | 用户管理")
 
 # 确认弹窗
 @st.dialog("确认删除用户")
@@ -29,12 +31,24 @@ def confirm_delete_user(user_id: int) -> None:
             st.rerun()
 
 # 确认弹窗
-@st.dialog("确认重置密码")
-def confirm_reset_password(user_id: int, hashed_password: str) -> None:
+@st.dialog("确认重置用户")
+def confirm_reset_user(
+    user_id: int, 
+    username: str | None = None, 
+    role: str | None = None,
+    hashed_password: str | None = None
+) -> None:
     col_1, col_2 = st.columns(2)
     with col_1:
         if st.button("确认", use_container_width=True, type="primary"):
-            reset_password(user_id, hashed_password)
+            if username is not None:
+                reset_username(user_id, username)
+            if role is not None:
+                reset_role(user_id, role)
+            if hashed_password is not None:
+                reset_password(user_id, hashed_password)
+            if username is None and hashed_password is None:
+                st.error("请输入新用户名或密码")
             st.rerun()
     with col_2:
         if st.button("取消", use_container_width=True):
@@ -84,8 +98,8 @@ with col_2:
 
             role = st.selectbox(
                 "角色",
-                ["admin", "manager", "staff"],
-                index=2,
+                ["manager", "staff"],
+                index=1,
                 placeholder="请选择角色",
             )
 
@@ -98,40 +112,48 @@ with col_2:
                     
     # 如有选中的用户，且id不为1(即用户不是admin)，则显示删除用户和重置密码表单
     elif user_selected is not None and id_selected != 1:
-        with st.form("delete_user_form"):
-            st.subheader("删除用户")
-            
-            st.text_input(
-                "用户名", 
-                value=user_selected.username, 
-                disabled=True,
-            )
-
-            if st.form_submit_button("删除用户", use_container_width=True, type="primary"):
-                confirm_delete_user(user_selected.id)
+        if st.session_state.role == "admin":
+            with st.form("delete_user_form"):
+                st.subheader("删除用户")
                 
-        with st.form("reset_password_form"):
-            st.subheader("重置密码")
+                st.text_input(
+                    "用户名", 
+                    value=user_selected.username, 
+                    disabled=True,
+                )
+
+                if st.form_submit_button("删除用户", use_container_width=True, type="primary"):
+                    confirm_delete_user(user_selected.id)
+                
+        with st.form("reset_user_form"):
+            st.subheader("重置用户")
             
-            st.text_input(
+            new_username = st.text_input(
                 "用户名", 
                 value=user_selected.username, 
-                disabled=True,
-            )
+            ).strip()
+            
+            new_username = None if new_username == "" else new_username
+            
+            new_role = st.selectbox(
+                "角色", 
+                options=['manager', 'staff'],
+                index=0 if user_selected.role =='manager' else 1, 
+            ).strip()
 
             new_password = st.text_input(
-                "新密码", 
-                value="", 
+                "密码", 
+                value="",
                 type="password",
-            )
+            ).strip()
             
-            hashed_password = hash_password(new_password)
+            new_hashed_password = None if new_password == "" else hash_password(new_password)
 
-            if st.form_submit_button("重置密码", use_container_width=True, type="primary"):
-                if new_password == "":
-                    st.error("请输入新密码")
+            if st.form_submit_button("重置用户", use_container_width=True, type="primary"):
+                if new_username is None and new_role is not None and new_hashed_password is None:
+                    st.error("请输入新用户名、角色、或密码")
                 else:
-                    confirm_reset_password(user_selected.id, hashed_password)
+                    confirm_reset_user(user_selected.id, new_username, new_role, new_hashed_password)
                     
     # 其余情况(即有选中的用户，且id为1，是admin)，则不显示表单
     else:

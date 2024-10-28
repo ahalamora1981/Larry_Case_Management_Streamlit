@@ -13,9 +13,9 @@ from package.utils import get_case_df_display
 from views.sidebar import sidebar
 
 
-sidebar("案件上传")
+sidebar("案件更新 | 文件更新")
 
-st.header("法诉案件管理系统")
+st.header("法诉案件管理系统 | 案件更新 | 文件更新")
 
 all_batch_ids = get_all_batch_ids()
 
