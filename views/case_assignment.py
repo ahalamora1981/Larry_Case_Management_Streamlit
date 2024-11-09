@@ -76,6 +76,8 @@ def confirm_delete_cases(cases: list[Case]) -> None:
         st.rerun()
 
 all_batch_ids = get_all_batch_ids()
+
+# 对应的批次ID进行排序，先按年份降序，再按月份降序，由近到远。
 all_batch_ids.sort(key=lambda x: int(x.split('-')[1]),reverse=True)
 all_batch_ids.sort(key=lambda x: int(x.split('-')[0]),reverse=True)
 

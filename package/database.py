@@ -144,8 +144,11 @@ def import_cases(xlsx_file: BytesIO, batch_id: str) -> str | None:
             list_id = row['列表ID']
         ).first()
 
+        # 检查案件是否已存在
         if case_selected is not None:
-            return f"【错误】案件 - 用户名: {row['用户名']} - 列表ID: {row['列表ID']} 已存在"
+            # return f"【错误】案件 - 用户名: {row['用户名']} - 列表ID: {row['列表ID']} 已存在"
+            session.delete(case_selected)
+            session.commit()
             
         # 创建新的案件
         new_case = Case(
@@ -288,7 +291,8 @@ def update_case(
     print_user_id: int | None = None,
     status_id: int | None = None,
     case_register_id: str | None = None,
-    case_register_date: Date | None = None
+    case_register_date: Date | None = None,
+    court_session_open_date: Date | None = None,
 ) -> None:
     this_case = session.query(Case).filter_by(id=str(id)).first()
     if register_user_id is not None:
@@ -301,6 +305,8 @@ def update_case(
         this_case.case_register_id = case_register_id
     if case_register_date is not None:
         this_case.case_register_date = case_register_date
+    if court_session_open_date is not None:
+        this_case.court_session_open_date = court_session_open_date
     this_case.case_update_datetime = datetime.now()
 
 def delete_case_by_id(session: SessionClass, id: int | None) -> None:

@@ -13,7 +13,7 @@ from package.database import (
     load_status_list,
 )
 from package.utils import get_case_df_display
-from views.sidebar import sidebar
+
 
 def case_update_staff_page(user_type: str = None):
     # 更新确认弹窗
@@ -301,6 +301,15 @@ def case_update_staff_page(user_type: str = None):
             else:
                 case_register_id = None
                 case_register_date = None
+                
+            if st.toggle("是否更新开庭日期"):
+                court_session_open_date = st.date_input(
+                    "开庭日期",
+                    value=datetime.now(),
+                    disabled=disable_form_input,
+                )
+            else:
+                court_session_open_date = None
             
             # 提交按钮
             if st.button(
@@ -317,12 +326,12 @@ def case_update_staff_page(user_type: str = None):
                     status_id=new_status_id,
                     case_register_id=case_register_id,
                     case_register_date=case_register_date,
+                    court_session_open_date=court_session_open_date,
                 )
                 session.commit()
                 session.close()
                 
                 logger.info(f"用户: {st.session_state.username} 把案件 {case_selected.id} 的状态从 {case_selected.status_id} 更新为 {new_status_id}")
-                    
                 st.rerun()
         else:  # 多选
             cases_selected = []

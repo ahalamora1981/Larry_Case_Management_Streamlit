@@ -328,3 +328,25 @@
 2024-10-28 10:46:38.616 | INFO     | __main__:ui_login:29 - 用户: admin 尝试登录
 2024-10-28 10:48:50.394 | INFO     | __main__:ui_login:29 - 用户: stan 尝试登录
 2024-10-28 10:49:02.484 | INFO     | __main__:ui_login:29 - 用户: admin 尝试登录
+2024-10-28 19:09:35.948 | INFO     | __main__:ui_login:29 - 用户: stan 尝试登录
+2024-10-28 19:10:41.201 | INFO     | __main__:ui_login:29 - 用户: admin 尝试登录
+2024-10-28 19:12:28.671 | INFO     | __main__:ui_login:29 - 用户: stan 尝试登录
+2024-10-28 19:13:09.748 | INFO     | views.case_update:case_update_staff_page:324 - 用户: stan 把案件 1440 的状态从 1 更新为 2
+2024-10-28 19:15:53.176 | INFO     | __main__:ui_login:29 - 用户: admin 尝试登录
+2024-10-28 19:17:11.694 | ERROR    | __page__:<module>:92 - 【错误】 - 用户名: pdu77067146 - 列表ID: 497645778 不存在
+2024-10-28 19:17:35.691 | ERROR    | __page__:<module>:134 - '公司名称'
+2024-10-28 19:17:42.415 | ERROR    | __page__:<module>:129 - 【错误】案件 - 用户名: pdu15207538 - 列表ID: 477559155 已存在
+2024-10-28 19:22:14.362 | INFO     | views.case_update:case_update_staff_page:325 - 用户: admin 把案件 1440 的状态从 13 更新为 6
+2024-10-28 19:22:42.692 | INFO     | views.case_update:case_update_staff_page:324 - 用户: admin 把案件 1440 的状态从 6 更新为 6
+2024-10-28 19:23:19.204 | INFO     | views.case_update:case_update_staff_page:324 - 用户: admin 把案件 1440 的状态从 6 更新为 14
+2024-10-28 19:24:58.950 | INFO     | __main__:ui_login:29 - 用户: stan 尝试登录
+2024-10-28 19:25:06.497 | INFO     | views.case_update:case_update_staff_page:324 - 用户: stan 把案件 1440 的状态从 14 更新为 23
+2024-10-28 19:27:57.544 | INFO     | views.case_update:case_update_staff_page:324 - 用户: stan 把案件 1440 的状态从 23 更新为 15
+2024-10-28 19:32:20.830 | INFO     | views.case_update:case_update_staff_page:334 - 用户: stan 把案件 1440 的状态从 7 更新为 20
+2024-10-28 19:32:35.292 | INFO     | views.case_update:case_update_staff_page:334 - 用户: stan 把案件 1440 的状态从 20 更新为 20
+2024-10-30 09:29:20.795 | INFO     | __main__:ui_login:29 - 用户: stan 尝试登录
+2024-10-30 09:43:20.307 | INFO     | __main__:ui_login:29 - 用户: stan 尝试登录
+2024-10-30 09:45:03.069 | INFO     | __main__:ui_login:29 - 用户: stan 尝试登录
+2024-11-08 09:36:30.331 | INFO     | __main__:ui_login:29 - 用户: admin 尝试登录
+2024-11-08 09:36:58.637 | INFO     | __main__:ui_login:29 - 用户: stan 尝试登录
+2024-11-08 09:44:00.937 | INFO     | __main__:ui_login:29 - 用户: stan 尝试登录

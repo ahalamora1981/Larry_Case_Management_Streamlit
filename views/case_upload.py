@@ -18,6 +18,10 @@ st.header("法诉案件管理系统 | 案件上传")
 
 all_batch_ids = get_all_batch_ids()
 
+# 对应的批次ID进行排序，先按年份降序，再按月份降序，由近到远。
+all_batch_ids.sort(key=lambda x: int(x.split('-')[1]), reverse=True)
+all_batch_ids.sort(key=lambda x: int(x.split('-')[0]), reverse=True)
+
 # 获取当前日期和月份
 today = datetime.now()
 year_of_today = today.year
@@ -84,7 +88,7 @@ else:
         # 在页面中添加批次ID的下拉框
         batch_id = st.selectbox(
             "批次ID",
-            options=all_batch_ids[::-1],
+            options=all_batch_ids,
             label_visibility="collapsed",
             placeholder="选择批次ID",
             index=0,
