@@ -56,17 +56,22 @@ def confirm_reset_user(
 
 user_df = read_user_from_sql()
 user_df = user_df.loc[user_df['username'] != 'admin']
+user_df = user_df.loc[user_df['username'] != 'jtao']
 user_df = user_df.loc[user_df['username'] != 'none']
 user_df = user_df.loc[user_df['username'] != st.session_state.username]
+
+user_df_display = user_df[['username', 'role']]
+user_df_display = user_df_display.rename(columns={'username': '用户名', 'role': '角色'})
 
 col_1, col_2 = st.columns([3, 1])
 
 with col_1:
     index_selected = st.dataframe(
-        user_df[['username', 'role']], 
+        user_df_display, 
         on_select="rerun",
         selection_mode="single-row",
         use_container_width=True,
+        hide_index=True,
     )
 
 id_selected = None

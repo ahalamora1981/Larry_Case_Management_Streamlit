@@ -99,9 +99,18 @@ else:
         case_df = read_case_from_sql(batch_id)
         case_df_display = get_case_df_display(case_df, case_status_df, columns_pairs)
         
-    st.dataframe(case_df_display)
-
+    st.dataframe(case_df_display, hide_index=True)
+    st.write(f"案件总数: {len(case_df)}")
+    
 xlsx_file = st.file_uploader("请上传案件信息Excel文件", type=["xlsx"])
+
+# Excel样例下载
+st.download_button(
+    label="下载Excel样例",
+    data=open("data/首次导入模版-v1.1.xlsx", "rb").read(),
+    file_name="首次导入模版-v1.1.xlsx",
+    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+)
 
 col_21, col_22, _, _ = st.columns(4)
 
