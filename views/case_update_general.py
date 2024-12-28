@@ -2,29 +2,28 @@ import streamlit as st
 import pandas as pd
 from loguru import logger
 from datetime import datetime
+import pytz
 
 from package.database import (
     get_all_batch_ids,
-    read_case_from_sql, 
-    update_cases,
-    load_status_list,
+    read_cases_from_sql, 
+    update_cases
 )
-from package.utils import get_case_df_display
+from package.utils import get_cases_df_display
 from views.sidebar import sidebar
 
 
-sidebar("案件更新 | 文件")
+sidebar("案件更新")
 
-st.header("法诉案件管理系统 | 案件更新 | 文件")
-
-all_batch_ids = get_all_batch_ids()
+st.header("法诉案件管理系统 (案件更新)")
 
 # 获取当前日期和月份
-today = datetime.now()
-year_of_today = today.year
-month_of_today = today.month
+shanghai_tz = pytz.timezone('Asia/Shanghai')
+shanghai_time = datetime.now(shanghai_tz)
+year_of_today = shanghai_time.year
+month_of_today = shanghai_time.month
 
-case_status_df = load_status_list()
+all_batch_ids = get_all_batch_ids()
 
 if not all_batch_ids:
     st.warning("案件信息表为空")
@@ -41,20 +40,12 @@ else:
         ('lawyer', '承办律师'),
         ('province_city', '所属省/市'),
         ('court', '法院全称'),
-        ('status_id', '状态序号'),
+        ('case_status', '案件状态'),
         ('case_register_id', '立案号'),
         ('case_register_date', '立案日期'),
-        ('court_session_open_date', '开庭日期'),
-        ('case_register_user_id', '立案负责人ID'),
-        ('case_print_user_id', '打印负责人ID'),
-        ('case_update_datetime', '案件更新时间'),
         ('update_remark', '更新备注'),
-        ('repayment_plan', '还款计划'),
-    ]
-    
-    display_names = [item[1] for item in columns_pairs] + [
-        '案件阶段',
-        '案件状态',
+        ('express_number', '快递单号'),
+        ('case_update_datetime', '案件更新时间'),
     ]
 
     col_11, _, _, _ = st.columns(4)
@@ -63,7 +54,7 @@ else:
         # 在页面中添加批次ID的下拉框
         batch_id = st.selectbox(
             "批次ID",
-            options=all_batch_ids[::-1],
+            options=all_batch_ids,
             label_visibility="collapsed",
             placeholder="选择批次ID",
             index=0,
@@ -71,34 +62,37 @@ else:
         
     # 如选择了批次ID，则针对该批次ID进行筛选
     if batch_id is not None:
-        case_df = read_case_from_sql(batch_id)
-        case_df_display = get_case_df_display(case_df, case_status_df, columns_pairs)
+        case_df = read_cases_from_sql(batch_id)
+        case_df_display = get_cases_df_display(case_df, columns_pairs)
         
     st.dataframe(case_df_display, hide_index=True)
     st.write(f"案件总数: {len(case_df)}")
+    
+if st.session_state.role == "staff":
+    st.stop()
 
 xlsx_file = st.file_uploader("请上传案件更新信息Excel文件", type=["xlsx"])
 
 # Excel样例下载
 st.download_button(
     label="下载Excel样例",
-    data=open("data/更新导入模版-v1.3.xlsx", "rb").read(),
-    file_name="更新导入模版-v1.3.xlsx",
+    data=open("data/2_更新导入模版.xlsx", "rb").read(),
+    file_name="更新导入模版.xlsx",
     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
 )
 
-if xlsx_file is not None:
-    df_update = pd.read_excel(xlsx_file)
-
-    for col in df_update.columns:
-        if col not in display_names:
-            raise Exception(f"Excel文件中存在未定义的字段：{col}") 
-
 # 在页面中添加“导入案件”的按钮，并进行错误处理
 if xlsx_file is not None:
+    df_update = pd.read_excel(xlsx_file, dtype=str)
+    df_update_standard = pd.read_excel("data/2_更新导入模版.xlsx", dtype=str)
+    
+    if df_update.columns.tolist() != df_update_standard.columns.tolist():
+        logger.error("Excel文件的字段与“更新导入模版”不匹配，请检查")
+        raise ValueError("Excel文件的字段与“更新导入模版”不匹配，请检查")
+    
     if st.button("更新案件", use_container_width=True, type="primary"):
         try:
-            result = update_cases(xlsx_file, batch_id)
+            result = update_cases(df_update, df_update.columns.tolist())
             if result is not None:
                 st.text_area("错误信息", value=result, height=300, disabled=True)
             else:

@@ -41,21 +41,24 @@ def ui_main() -> None:
         page_icon=":memo:", 
     )
     
-    if st.session_state.role in ["admin", "manager"]:
+    if st.session_state.role in ["admin", "manager", ]:
         pg = st.navigation([
             st.Page(os.path.join(CWD, "views", "dashboard.py"), title="案件统计"),
-            st.Page(os.path.join(CWD, "views", "case_upload.py"), title="案件上传"),
-            st.Page(os.path.join(CWD, "views", "case_management.py"), title="案件管理"),
-            st.Page(os.path.join(CWD, "views", "case_manual_update_manager.py"), title="案件更新 | 手动"),
-            st.Page(os.path.join(CWD, "views", "case_file_update.py"), title="案件更新 | 文件"),
-            st.Page(os.path.join(CWD, "views", "court_manual_update.py"), title="开庭更新 | 手动"),
-            st.Page(os.path.join(CWD, "views", "court_file_update.py"), title="开庭更新 | 文件"),
+            st.Page(os.path.join(CWD, "views", "case_import.py"), title="案件首次导入"),
+            st.Page(os.path.join(CWD, "views", "case_update_general.py"), title="案件更新"),
+            st.Page(os.path.join(CWD, "views", "case_update_express.py"), title="邮寄状态变更"),
+            st.Page(os.path.join(CWD, "views", "case_update_trial.py"), title="开庭时间更新"),
+            st.Page(os.path.join(CWD, "views", "case_update_repayment.py"), title="还款计划更新"),
             st.Page(os.path.join(CWD, "views", "user_management.py"),  title="用户管理"),
         ])
     elif st.session_state.role == "staff":
         pg = st.navigation([
-            st.Page(os.path.join(CWD, "views", "case_manual_update_register.py"), title="立案 - 案件更新"),
-            st.Page(os.path.join(CWD, "views", "case_manual_update_print.py"), title="打印 - 案件更新"),
+            st.Page(os.path.join(CWD, "views", "dashboard.py"), title="案件统计"),
+            st.Page(os.path.join(CWD, "views", "case_import.py"), title="案件首次导入"),
+            st.Page(os.path.join(CWD, "views", "case_update_general.py"), title="案件更新"),
+            st.Page(os.path.join(CWD, "views", "case_update_express.py"), title="邮寄状态变更"),
+            st.Page(os.path.join(CWD, "views", "case_update_trial.py"), title="开庭时间更新"),
+            st.Page(os.path.join(CWD, "views", "case_update_repayment.py"), title="还款计划更新"),
         ])
     else:
         raise Exception("Invalid role")
@@ -74,23 +77,15 @@ def initialization():
     # 创建管理员账号, id=1
     if get_user_by_username('admin') is None:
         add_user('admin', hash_password(admin_password), 'admin')
-
-    # 创建“无立案负责人”账号, id=2
-    if get_user_by_username('none') is None:
-        add_user('none', hash_password('none'), 'staff')
         
-    # 创建后台管理员账号, jtao, id=3
+    # 创建后台管理员账号, jtao, id=2
     if get_user_by_username('jtao') is None:
         add_user('jtao', hash_password('jtao@0611'), 'admin')
         
     # 初始化用户登录状态
     if "logged_in" not in st.session_state:
         st.session_state.logged_in = False
-    
-    # 保存 Config 到文件    
-    # with open(os.path.join(CWD, "config.yaml"), "w") as f:
-    #     yaml.dump(config, f)
-
+        
 
 if __name__ == "__main__":
     CWD = os.getcwd()

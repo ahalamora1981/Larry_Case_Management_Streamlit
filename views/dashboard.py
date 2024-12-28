@@ -1,7 +1,7 @@
 import streamlit as st
 from datetime import date
 from views.sidebar import sidebar
-from package.database import get_case_by_batch_id, get_all_cases
+from package.database import get_cases_by_batch_id, get_all_cases
 
 
 sidebar("案件统计")
@@ -15,8 +15,8 @@ last_month = month - 1 if month > 1 else 12
 year_of_last_month = year if last_month > 1 else year - 1
 
 num_all_cases = len(get_all_cases())
-num_cases_last_month = len(get_case_by_batch_id(f"{year_of_last_month}-{last_month}"))
-num_cases_this_month = len(get_case_by_batch_id(f"{year}-{month}"))
+num_cases_last_month = len(get_cases_by_batch_id(f"{year_of_last_month}-{last_month}"))
+num_cases_this_month = len(get_cases_by_batch_id(f"{year}-{month}"))
 
 if num_cases_last_month != 0:
     percent_change_by_month = (num_cases_this_month - num_cases_last_month) / num_cases_last_month * 100

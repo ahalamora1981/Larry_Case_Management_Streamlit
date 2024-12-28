@@ -1,20 +1,20 @@
 import streamlit as st
+import pandas as pd
 from loguru import logger
 from datetime import datetime
 
 from package.database import (
     get_all_batch_ids,
-    read_case_from_sql, 
+    read_cases_from_sql, 
     import_cases,
-    load_status_list,
 )
-from package.utils import get_case_df_display
+from package.utils import get_cases_df_display
 from views.sidebar import sidebar
 
 
-sidebar("案件上传")
+sidebar("案件首次导入")
 
-st.header("法诉案件管理系统 | 案件上传")
+st.header("法诉案件管理系统 (案件首次导入)")
 
 all_batch_ids = get_all_batch_ids()
 
@@ -26,8 +26,6 @@ all_batch_ids.sort(key=lambda x: int(x.split('-')[0]), reverse=True)
 today = datetime.now()
 year_of_today = today.year
 month_of_today = today.month
-
-case_status_df = load_status_list()
 
 if not all_batch_ids:
     st.warning("案件信息表为空")
@@ -68,17 +66,12 @@ else:
         ('total_repurchase_penalty', '代偿回购罚息'),
         ('total_repurchase_all', '代偿回购总额'),
         ('latest_repurchase_date', '最晚代偿时间'),
-        ('can_lawsuit', '是否可诉'),
+        ('if_can_lawsuit', '是否可诉'),
         ('law_firm', '承办律所'),
         ('lawyer', '承办律师'),
         ('province_city', '所属省/市'),
         ('court', '法院全称'),
-        ('status_id', '状态序号'),
-        ('case_register_id', '立案号'),
-        ('case_register_date', '立案日期'),
-        ('court_session_open_date', '开庭日期'),
-        ('case_register_user_id', '立案负责人ID'),
-        ('case_print_user_id', '打印负责人ID'),
+        ('case_status', '案件状态'),
         ('case_update_datetime', '案件更新时间')
     ]
 
@@ -96,19 +89,22 @@ else:
         
     # 如选择了批次ID，则针对该批次ID进行筛选
     if batch_id is not None:
-        case_df = read_case_from_sql(batch_id)
-        case_df_display = get_case_df_display(case_df, case_status_df, columns_pairs)
+        case_df = read_cases_from_sql(batch_id)
+        case_df_display = get_cases_df_display(case_df, columns_pairs)
         
     st.dataframe(case_df_display, hide_index=True)
     st.write(f"案件总数: {len(case_df)}")
+    
+if st.session_state.role == "staff":
+    st.stop()
     
 xlsx_file = st.file_uploader("请上传案件信息Excel文件", type=["xlsx"])
 
 # Excel样例下载
 st.download_button(
     label="下载Excel样例",
-    data=open("data/首次导入模版-v1.1.xlsx", "rb").read(),
-    file_name="首次导入模版-v1.1.xlsx",
+    data=open("data/1_首次导入模版.xlsx", "rb").read(),
+    file_name="首次导入模版.xlsx",
     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
 )
 
@@ -135,9 +131,16 @@ batch_id_upload = f"{batch_year}-{batch_month}"
 
 # 在页面中添加“导入案件”的按钮，并进行错误处理
 if xlsx_file is not None:
+    df_import = pd.read_excel(xlsx_file, dtype=str)
+    df_import_standard = pd.read_excel("data/1_首次导入模版.xlsx", dtype=str)
+    
+    if df_import.columns.tolist() != df_import_standard.columns.tolist():
+        logger.error("Excel文件的字段与“首次导入模版”不匹配，请检查")
+        raise ValueError("Excel文件的字段与“首次导入模版”不匹配，请检查")
+
     if st.button("导入案件", use_container_width=True, type="primary"):
         try:
-            result = import_cases(xlsx_file, batch_id_upload)
+            result = import_cases(df_import, batch_id_upload)
             if result is not None:
                 logger.error(result)
                 st.error(result)

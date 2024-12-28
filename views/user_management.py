@@ -57,7 +57,6 @@ def confirm_reset_user(
 user_df = read_user_from_sql()
 user_df = user_df.loc[user_df['username'] != 'admin']
 user_df = user_df.loc[user_df['username'] != 'jtao']
-user_df = user_df.loc[user_df['username'] != 'none']
 user_df = user_df.loc[user_df['username'] != st.session_state.username]
 
 user_df_display = user_df[['username', 'role']]

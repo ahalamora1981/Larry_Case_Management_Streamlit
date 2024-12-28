@@ -3,20 +3,18 @@ import os
 import time
 import pandas as pd
 import streamlit as st
-from io import BytesIO
 from loguru import logger
 from datetime import datetime
+import pytz
 from sqlalchemy import (
-    create_engine, Column, Integer, String, ForeignKey, Date, DateTime, Time, distinct
+    create_engine, Column, Integer, String, distinct
 )
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, relationship
+from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm import Session as SessionClass
 
 
 CWD = os.getcwd()
-
-STATUS_FILE_PATH = os.path.join(CWD, "data", "status.xlsx")
 
 # 创建数据库引擎，连接到 SQLite 数据库（如果数据库不存在，会自动创建）
 engine_lawsuit = create_engine('sqlite:///lawsuit.db', echo=True)
@@ -29,8 +27,9 @@ class Case(Base):
     __tablename__ = 'cases'
 
     id = Column(Integer, primary_key=True)
+    
+    ### 【首次导入模版】 ###
     batch_id = Column(String)  # 批次ID YYYY-MM
-    batch_date = Column(Date)  # 批次日期
     company_name = Column(String)  # 公司名称
     shou_bie = Column(String)  # 手别
     case_id = Column(String)  # 案件id
@@ -48,43 +47,63 @@ class Case(Base):
     capital_institution = Column(String)  # 资方机构
     rongdan_company = Column(String)  # 融担公司
     contract_amount = Column(String)  # 原始类型：Column(Float)    # 合同金额
-    loan_date = Column(Date)  # 放款日期
-    last_due_date = Column(Date)  # 最后一期应还款日
+    loan_date = Column(String)  # 放款日期
+    last_due_date = Column(String)  # 最后一期应还款日
     loan_terms = Column(Integer)  # 借款期数
     interest_rate = Column(String)  # 原始类型：Column(Float)    # 利率
-    overdue_start_date = Column(Date)  # 逾期开始日期
-    last_pay_date = Column(Date)  # 上一个还款日期
-    overdue_days = Column(Integer)  # 列表逾期天数
+    overdue_start_date = Column(String)  # 逾期开始日期
+    last_pay_date = Column(String)  # 上一个还款日期
+    overdue_days = Column(String)  # 列表逾期天数
     outstanding_principal = Column(String)  # 原始类型：Column(Float)    # 待还本金
     outstanding_charge = Column(String)  # 原始类型：Column(Float)    # 待还费用
     outstanding_amount = Column(String)  # 原始类型：Column(Float)    # 待还金额
-    data_collection_date = Column(Date)  # 数据提取日
+    data_collection_date = Column(String)  # 数据提取日
     total_repurchase_principal = Column(String)  # 原始类型：Column(Float)    # 代偿回购本金
     total_repurchase_interest = Column(String)  # 原始类型：Column(Float)    # 代偿回购利息
     total_repurchase_penalty = Column(String)  # 原始类型：Column(Float)    # 代偿回购罚息
     total_repurchase_all = Column(String)  # 原始类型：Column(Float)    # 代偿回购总额
     latest_repurchase_date = Column(String)  # 最晚代偿时间
-    can_lawsuit = Column(String)  # 是否可诉
-    law_firm = Column(String, default=None)  # 承办律所
-    lawyer = Column(String, default=None)  # 承办律师
-    province_city = Column(String, default=None)  # 所属省/市
-    court = Column(String, default=None)  # 法院全称
-    status_id = Column(Integer, default=1)  # 状态序号
+    if_can_lawsuit = Column(String)  # 是否可诉
+    law_firm = Column(String)  # 承办律所
+    lawyer = Column(String)  # 承办律师
+    province_city = Column(String)  # 所属省/市
+    court = Column(String)  # 法院全称
+    
+    ### 其他 ###
+    case_status = Column(String)  # 案件状态
+    case_register_user = Column(String)  # 立案负责人
+    case_express_user = Column(String)  # 快递负责人
+    case_update_datetime = Column(String)  # 案件更新时间
 
+    ### 【更新导入模版】新增 ###
     case_register_id = Column(String, default=None)  # 立案号
-    case_register_date = Column(Date, default=None)  # 立案日期
-    repayment_plan = Column(String, default=None) # 还款计划
+    case_register_date = Column(String, default=None)  # 立案日期
     update_remark = Column(String, default=None) # 更新备注
+    express_number = Column(String, default=None) # 快递单号
     
-    court_session_open_date = Column(Date, default=None)  # 开庭日期
-    court_session_open_time = Column(Time, default=None)  # 开庭时间
+    ### 【开庭时间表导入模版】新增 ###
+    defendant = Column(String, default=None)  # 被告
+    trial_date = Column(String, default=None)  # 开庭日期
+    trial_time = Column(String, default=None)  # 开庭时间
+    target_amount = Column(String, default=None)  # 标的金额
+    customer_principal = Column(String, default=None)  # 客户本金
     plaintiff_company = Column(String, default=None)  # 原告公司
-    court_law_firm = Column(String, default=None)  # 开庭律所
-    court_phone = Column(String, default=None)  # 法院电话
-    court_status = Column(String, default=None)  # 开庭状态
-    judgement_remark = Column(String, default=None) # 判决备注
-    is_case_closed = Column(String, default=None) # 结案与否
+    trial_law_firm = Column(String, default=None)  # 开庭律所
+    court_phone_number = Column(String, default=None)  # 法院电话
+    trial_status = Column(String, default=None)  # 开庭状态
+    sentence_remark = Column(String, default=None)  # 判决备注
+    if_case_closed = Column(String, default=None)  # 结案与否
     
+    ### 【邮寄状态变更模版】新增 ###
+    # 无
+    
+    ### 【案件还款计划导入模版】新增 ###
+    repayment_plan = Column(String, default=None)  # 还款计划
+    repayment_start_date = Column(String, default=None)  # 还款开始日期
+    repayment_channel = Column(String, default=None)  # 还款渠道
+    repayment_remark = Column(String, default=None)  # 还款备注
+    
+    ### 自定义字段(预留) ###
     custom_data_1 = Column(String, default=None) # 自定义数据1
     custom_data_2 = Column(String, default=None) # 自定义数据2
     custom_data_3 = Column(String, default=None) # 自定义数据3    
@@ -95,14 +114,6 @@ class Case(Base):
     custom_data_8 = Column(String, default=None) # 自定义数据8
     custom_data_9 = Column(String, default=None) # 自定义数据9
     custom_data_10 = Column(String, default=None) # 自定义数据10
-    
-    case_register_user_id = Column(Integer, ForeignKey('users.id'), nullable=False)  # 立案负责人ID
-    case_print_user_id = Column(Integer, ForeignKey('users.id'), nullable=False)  # 打印负责人ID
-    
-    case_register_user = relationship("User", foreign_keys=[case_register_user_id], back_populates="register_cases")
-    case_print_user = relationship("User", foreign_keys=[case_print_user_id], back_populates="print_cases")
-    
-    case_update_datetime = Column(DateTime, default=None)  # 立案日期
 
 
 class User(Base):
@@ -112,9 +123,6 @@ class User(Base):
     username = Column(String, unique=True)  # 用户名
     password = Column(String)  # 密码
     role = Column(String)  # 角色
-
-    register_cases = relationship("Case", foreign_keys=[Case.case_register_user_id], back_populates="case_register_user")
-    print_cases = relationship("Case", foreign_keys=[Case.case_print_user_id], back_populates="case_print_user")
 
 
 # 创建所有定义的表
@@ -133,33 +141,25 @@ def timer(func):
         return result
     return wrapper
 
-def load_status_list() -> pd.DataFrame:
-    df = pd.read_excel(
-        STATUS_FILE_PATH,
-        index_col=0,
-    )
-    
-    if df.shape[0] != df.案件状态.shape[0]:
-        raise ValueError("案件状态存在重复")
-    
-    return df
-
 def get_all_batch_ids() -> list[str]:
     session = Session()
     # 查询所有非重复的 batch_id
     result = session.query(distinct(Case.batch_id)).all()
     all_batch_ids = [batch_id[0] for batch_id in result]
+    
+    # 自定义排序键函数，将“年-月”字符串转换为日期对象
+    def sort_key(date_str):
+        return datetime.strptime(date_str, "%Y-%m")
+
+    # 使用 sorted 函数进行排序，reverse=True 表示从近期到早期
+    sorted_batch_ids = sorted(all_batch_ids, key=sort_key, reverse=True)
+
     session.close()
-    return all_batch_ids
+    return sorted_batch_ids
 
 @timer
-def read_case_from_sql(batch_id: str) -> pd.DataFrame:
+def read_cases_from_sql(batch_id: str) -> pd.DataFrame:
     query = f"SELECT * FROM cases WHERE batch_id = '{batch_id}'"
-    df = pd.read_sql_query(query, engine_lawsuit, index_col='id')
-    return df
-
-def read_case_from_sql_court() -> pd.DataFrame:
-    query = f"SELECT * FROM cases WHERE court_status IS NOT NULL"
     df = pd.read_sql_query(query, engine_lawsuit, index_col='id')
     return df
 
@@ -167,18 +167,19 @@ def read_user_from_sql() -> pd.DataFrame:
     df = pd.read_sql_table("users", engine_lawsuit, index_col='id')
     return df
 
-def import_cases(xlsx_file: BytesIO, batch_id: str) -> str | None:
+def import_cases(df_import: pd.DataFrame, batch_id: str) -> str | None:
     progress_text = "案件导入中..."
     progress_percentage = 0
     progress_bar = st.progress(progress_percentage, text=progress_text)
 
     session = Session()
+    
+    shanghai_tz = pytz.timezone('Asia/Shanghai')
+    shanghai_time = datetime.now(shanghai_tz)
+    shanghai_time_str = shanghai_time.strftime('%Y-%m-%d %H:%M:%S')
 
-    # 从 Excel 文件中读取数据
-    df = pd.read_excel(xlsx_file, dtype=str)
-
-    for _, row in df.iterrows():
-        # 检查案件是否已存在，“用户名”+“列表ID”作为唯一键
+    for _, row in df_import.iterrows():
+        # 检查案件是否已存在、“用户名”+“列表ID”作为唯一键
         case_selected = session.query(Case).filter_by(
             user_name = row['用户名']
         ).filter_by(
@@ -194,7 +195,8 @@ def import_cases(xlsx_file: BytesIO, batch_id: str) -> str | None:
         # 创建新的案件
         new_case = Case(
             batch_id=batch_id,
-            batch_date=datetime.strptime(batch_id, "%Y-%m").date(),
+            
+            ### 【首次导入模版】 ###
             company_name = row['公司名称'] if not pd.isna(row['公司名称']) else None,
             shou_bie = row['手别'] if not pd.isna(row['手别']) else None,
             case_id = row['案件id'] if not pd.isna(row['案件id']) else None,
@@ -212,130 +214,93 @@ def import_cases(xlsx_file: BytesIO, batch_id: str) -> str | None:
             capital_institution = row['资方机构'] if not pd.isna(row['资方机构']) else None,
             rongdan_company = row['融担公司'] if not pd.isna(row['融担公司']) else None,
             contract_amount = row['合同金额'] if not pd.isna(row['合同金额']) else None,
-            loan_date = datetime.strptime(row['放款日期'][:10], "%Y-%m-%d").date() if not pd.isna(row['放款日期']) else None,
-            last_due_date = datetime.strptime(row['最后一期应还款日'][:10], "%Y-%m-%d").date() if not pd.isna(row['最后一期应还款日']) else None,
-            loan_terms = int(row['借款期数']) if not pd.isna(row['借款期数']) else None,
+            loan_date = row['放款日期'] if not pd.isna(row['放款日期']) else None,
+            last_due_date = row['最后一期应还款日'] if not pd.isna(row['最后一期应还款日']) else None,
+            loan_terms = row['借款期数'] if not pd.isna(row['借款期数']) else None,
             interest_rate = row['利率'] if not pd.isna(row['利率']) else None,
-            overdue_start_date = datetime.strptime(row['逾期开始日期'][:10], "%Y-%m-%d").date() if not pd.isna(row['逾期开始日期']) else None,
-            last_pay_date = datetime.strptime(row['上一个还款日期'][:10], "%Y-%m-%d") if not pd.isna(row['上一个还款日期']) else None,
-            overdue_days = int(row['列表逾期天数']) if not pd.isna(row['列表逾期天数']) else None,
+            overdue_start_date = row['逾期开始日期'] if not pd.isna(row['逾期开始日期']) else None,
+            last_pay_date = row['上一个还款日期'] if not pd.isna(row['上一个还款日期']) else None,
+            overdue_days = row['列表逾期天数'] if not pd.isna(row['列表逾期天数']) else None,
             outstanding_principal = row['待还本金'] if not pd.isna(row['待还本金']) else None,
             outstanding_charge = row['待还费用'] if not pd.isna(row['待还费用']) else None,
             outstanding_amount = row['待还金额'] if not pd.isna(row['待还金额']) else None,
-            data_collection_date = datetime.strptime(row['数据提取日'][:10], "%Y-%m-%d").date() if not pd.isna(row['数据提取日']) else None,
+            data_collection_date = row['数据提取日'] if not pd.isna(row['数据提取日']) else None,
             total_repurchase_principal = row['代偿回购本金'] if not pd.isna(row['代偿回购本金']) else None,
             total_repurchase_interest = row['代偿回购利息'] if not pd.isna(row['代偿回购利息']) else None,
             total_repurchase_penalty = row['代偿回购罚息'] if not pd.isna(row['代偿回购罚息']) else None,
             total_repurchase_all = row['代偿回购总额'] if not pd.isna(row['代偿回购总额']) else None,
             latest_repurchase_date = row['最晚代偿时间'] if not pd.isna(row['最晚代偿时间']) else None,
-            can_lawsuit = row['是否可诉'] if not pd.isna(row['是否可诉']) else None,
+            if_can_lawsuit = row['是否可诉'] if not pd.isna(row['是否可诉']) else None,
             law_firm = row['承办律所'] if not pd.isna(row['承办律所']) else None,
             lawyer = row['承办律师'] if not pd.isna(row['承办律师']) else None,
             province_city = row['所属省/市'] if not pd.isna(row['所属省/市']) else None,
             court = row['法院全称'] if not pd.isna(row['法院全称']) else None,
-            status_id = 1,
-            # case_register_id = None,
-            # case_register_date = None,
-            # court_session_open_date = None,
-            case_register_user_id = 2,
-            case_print_user_id = 2,
-            # case_update_datetime = None,
-            # remark = None
+            
+            ### 其他 ###
+            case_status = "案件初始导入",
+            case_register_user = None,
+            case_express_user = None,
+            case_update_datetime = shanghai_time_str,
+            
+            ### 【更新导入模版】新增 ###
+            # case_register_id = row['立案号'] if not pd.isna(row['立案号']) else None,
+            # case_register_date = row['立案日期'] if not pd.isna(row['立案日期']) else None,
+            # update_remark = row['更新备注'] if not pd.isna(row['更新备注']) else None,
+            # express_number = row['快递单号'] if not pd.isna(row['快递单号']) else None,
+            
+            ### 【开庭时间表导入模版】新增 ###
+            # defendant = row['被告'] if not pd.isna(row['被告']) else None,
+            # trial_date = row['开庭日期'] if not pd.isna(row['开庭日期']) else None,
+            # trial_time = row['开庭时间'] if not pd.isna(row['开庭时间']) else None,
+            # target_amount = row['标的金额'] if not pd.isna(row['标的金额']) else None,
+            # customer_principal = row['客户本金'] if not pd.isna(row['客户本金']) else None,
+            # plaintiff_company = row['原告公司'] if not pd.isna(row['原告公司']) else None,
+            # trial_law_firm = row['开庭律所'] if not pd.isna(row['开庭律所']) else None,
+            # court_phone_number = row['法院电话'] if not pd.isna(row['法院电话']) else None,
+            # trial_status = row['开庭状态'] if not pd.isna(row['开庭状态']) else None,
+            # sentence_remark = row['判决备注'] if not pd.isna(row['判决备注']) else None,
+            # if_case_closed = row['是否结案'] if not pd.isna(row['是否结案']) else None,
+            
+            ### 【邮寄状态变更模版】新增 ###
+            # 无
+            
+            ### 【案件还款计划导入模版】新增 ###
+            # repayment_plan = row['还款计划'] if not pd.isna(row['还款计划']) else None,
+            # repayment_start_date = row['开始还款日期'] if not pd.isna(row['开始还款日期']) else None,
+            # repayment_channel = row['渠道'] if not pd.isna(row['渠道']) else None,
+            # repayment_remark = row['还款备注'] if not pd.isna(row['还款备注']) else None,
         )
         session.add(new_case)
         session.commit()
         
         # 更新进度条
-        progress_percentage += (1 / df.shape[0])
+        progress_percentage += (1 / df_import.shape[0])
         progress_bar.progress(progress_percentage, text=progress_text)
             
     session.close()
 
-def update_cases_court(xlsx_file: BytesIO) -> str | None:
-    progress_text = "案件导入中..."
-    progress_percentage = 0
-    progress_bar = st.progress(progress_percentage, text=progress_text)
-
-    session = Session()
-
-    # 从 Excel 文件中读取数据
-    df = pd.read_excel(xlsx_file, dtype=str)
-    
-    error_msg_all = ""
-
-    for _, row in df.iterrows():
-        case_selected = session.query(Case).filter_by(
-            user_name = row['用户名']
-        ).filter_by(
-            list_id = row['列表ID']
-        ).first()
-
-        if case_selected is None:
-            error_msg = f"【告警】 - 用户名: {row['用户名']} - 列表ID: {row['列表ID']} 不存在"
-            error_msg_all += error_msg + "\n"
-            logger.warning(error_msg)
-            
-            # 更新进度条
-            progress_percentage += (1 / df.shape[0])
-            progress_bar.progress(progress_percentage, text=progress_text)
-            
-            continue
-        
-        try:
-            # 更新案件
-            case_selected.court_session_open_date = datetime.strptime(row['开庭日期'], "%Y-%m-%d").date() if not pd.isna(row['开庭日期']) else None
-            case_selected.court_session_open_time = datetime.strptime(row['开庭时间'], "%H:%M:%S").time() if not pd.isna(row['开庭时间']) else None
-            case_selected.plaintiff_company = row['原告公司'] if not pd.isna(row['原告公司']) else None
-            case_selected.court_law_firm = row['开庭律所'] if not pd.isna(row['开庭律所']) else None
-            case_selected.case_register_id = row['立案号'] if not pd.isna(row['立案号']) else None
-            case_selected.court = row['法院全称'] if not pd.isna(row['法院全称']) else None
-            case_selected.court_phone = row['法院电话'] if not pd.isna(row['法院电话']) else None
-            case_selected.court_status = row['开庭状态'] if not pd.isna(row['开庭状态']) else None
-            case_selected.judgement_remark = row['判决备注'] if not pd.isna(row['判决备注']) else None
-            case_selected.is_case_closed = row['结案与否'] if not pd.isna(row['结案与否']) else None
-
-            session.commit()
-        except Exception as e:
-            logger.error(e)
-        
-        # 更新进度条
-        progress_percentage += (1 / df.shape[0])
-        progress_bar.progress(progress_percentage, text=progress_text)
-            
-    session.close()
-    
-    if error_msg_all == "":
-        return None
-    else:
-        return error_msg_all
-
-def update_cases(xlsx_file: BytesIO, batch_id: str) -> str | None:
-    case_status_df = load_status_list()    
-    status_to_id = {df[1]['案件状态']: df[0] for df in case_status_df.iterrows()}
-    # id_to_status = {df[0]: df[1]['案件状态'] for df in case_status_df.iterrows()}
+def update_cases(
+    df_update: pd.DataFrame, 
+    update_fields: list[str],
+    case_status: str | None = None
+) -> str | None:
+    shanghai_tz = pytz.timezone('Asia/Shanghai')
+    shanghai_time = datetime.now(shanghai_tz)
+    shanghai_time_str = shanghai_time.strftime('%Y-%m-%d %H:%M:%S')
     
     progress_text = "案件更新中..."
     progress_percentage = 0
     progress_bar = st.progress(progress_percentage, text=progress_text)
 
     session = Session()
-
-    # 从 Excel 文件中读取数据
-    df = pd.read_excel(xlsx_file, dtype=str)
-    
     error_msg_all = ""
 
-    for _, row in df.iterrows():
+    for _, row in df_update.iterrows():
         case_selected = session.query(Case).filter_by(
             user_name = row['用户名']
         ).filter_by(
             list_id = row['列表ID']
         ).first()
-        
-        # print("##################\n")
-        # print(status_to_id[row['案件状态']])
-        # print(type(status_to_id[row['案件状态']]))
-        # print("\n##################")
 
         if case_selected is None:
             error_msg = f"【告警】 - 用户名: {row['用户名']} - 列表ID: {row['列表ID']} 不存在"
@@ -343,39 +308,142 @@ def update_cases(xlsx_file: BytesIO, batch_id: str) -> str | None:
             logger.warning(error_msg)
             
             # 更新进度条
-            progress_percentage += (1 / df.shape[0])
+            progress_percentage += (1 / df_update.shape[0])
             progress_bar.progress(progress_percentage, text=progress_text)
             
             continue
-
-        # if case_selected.batch_id != batch_id:
-        #     return f"【告警】 - 用户名: {row['用户名']} - 列表ID: {row['列表ID']} 不属于批次: {batch_id}"
         
         try:
             # 更新案件
-            case_selected.shou_bie = row['手别'] if not pd.isna(row['手别']) else None
-            case_selected.user_name = row['用户名'] if not pd.isna(row['用户名']) else None
-            case_selected.full_name = row['用户姓名'] if not pd.isna(row['用户姓名']) else None
-            case_selected.list_id = row['列表ID'] if not pd.isna(row['列表ID']) else None
-            case_selected.outstanding_principal = row['待还本金'] if not pd.isna(row['待还本金']) else None
-            case_selected.law_firm = row['承办律所'] if not pd.isna(row['承办律所']) else None
-            case_selected.lawyer = row['承办律师'] if not pd.isna(row['承办律师']) else None
-            case_selected.province_city = row['所属省/市'] if not pd.isna(row['所属省/市']) else None
-            case_selected.court = row['法院全称'] if not pd.isna(row['法院全称']) else None
-            case_selected.status_id = status_to_id[row['案件状态']] if not pd.isna(row['案件状态']) else None
-            case_selected.case_register_id = row['立案号'] if not pd.isna(row['立案号']) else None
-            case_selected.case_register_date = datetime.strptime(row['立案日期'], "%Y-%m-%d").date() if not pd.isna(row['立案日期']) else None
-            case_selected.court_session_open_date = datetime.strptime(row['开庭日期'], "%Y-%m-%d").date() if not pd.isna(row['开庭日期']) else None
-            case_selected.remark = row['更新备注'] if not pd.isna(row['更新备注']) else None
-            case_selected.repayment_plan = row['还款计划'] if not pd.isna(row['还款计划']) else None
-            case_selected.case_update_datetime = datetime.now()
-
+            if '公司名称' in update_fields:
+                case_selected.company_name = row['公司名称'] if not pd.isna(row['公司名称']) else None
+            if '手别' in update_fields:
+                case_selected.shou_bie = row['手别'] if not pd.isna(row['手别']) else None
+            if '案件id' in update_fields:
+                case_selected.case_id = row['案件id'] if not pd.isna(row['案件id']) else None
+            if '用户ID' in update_fields:
+                case_selected.user_id = row['用户ID'] if not pd.isna(row['用户ID']) else None
+            if '用户名' in update_fields:
+                case_selected.user_name = row['用户名'] if not pd.isna(row['用户名']) else None
+            if '用户姓名' in update_fields:
+                case_selected.full_name = row['用户姓名'] if not pd.isna(row['用户姓名']) else None
+            if '身份证号码' in update_fields:
+                case_selected.id_card = row['身份证号码'] if not pd.isna(row['身份证号码']) else None
+            if '性别' in update_fields:
+                case_selected.gender = row['性别'] if not pd.isna(row['性别']) else None
+            if '民族' in update_fields:
+                case_selected.nationality = row['民族'] if not pd.isna(row['民族']) else None
+            if '身份证地址' in update_fields:
+                case_selected.id_card_address = row['身份证地址'] if not pd.isna(row['身份证地址']) else None
+            if '注册手机号' in update_fields:
+                case_selected.mobile_phone = row['注册手机号'] if not pd.isna(row['注册手机号']) else None
+            if '列表ID' in update_fields:
+                case_selected.list_id = row['列表ID'] if not pd.isna(row['列表ID']) else None
+            if '融担模式' in update_fields:
+                case_selected.rongdan_mode = row['融担模式'] if not pd.isna(row['融担模式']) else None
+            if '合同号' in update_fields:
+                case_selected.contract_id = row['合同号'] if not pd.isna(row['合同号']) else None
+            if '资方机构' in update_fields:
+                case_selected.capital_institution = row['资方机构'] if not pd.isna(row['资方机构']) else None
+            if '融担公司' in update_fields:
+                case_selected.rongdan_company = row['融担公司'] if not pd.isna(row['融担公司']) else None
+            if '合同金额' in update_fields:
+                case_selected.contract_amount = row['合同金额'] if not pd.isna(row['合同金额']) else None
+            if '放款日期' in update_fields:
+                case_selected.loan_date = row['放款日期'] if not pd.isna(row['放款日期']) else None
+            if '最后一期应还款日' in update_fields:
+                case_selected.last_due_date = row['最后一期应还款日'] if not pd.isna(row['最后一期应还款日']) else None
+            if '借款期数' in update_fields:
+                case_selected.loan_terms = row['借款期数'] if not pd.isna(row['借款期数']) else None
+            if '利率' in update_fields:
+                case_selected.interest_rate = row['利率'] if not pd.isna(row['利率']) else None
+            if '逾期开始日期' in update_fields:
+                case_selected.overdue_start_date = row['逾期开始日期'] if not pd.isna(row['逾期开始日期']) else None
+            if '上一个还款日期' in update_fields:
+                case_selected.last_pay_date = row['上一个还款日期'] if not pd.isna(row['上一个还款日期']) else None
+            if '列表逾期天数' in update_fields:
+                case_selected.overdue_days = row['列表逾期天数'] if not pd.isna(row['列表逾期天数']) else None
+            if '待还本金' in update_fields:
+                case_selected.outstanding_principal = row['待还本金'] if not pd.isna(row['待还本金']) else None
+            if '待还费用' in update_fields:
+                case_selected.outstanding_charge = row['待还费用'] if not pd.isna(row['待还费用']) else None
+            if '待还金额' in update_fields:
+                case_selected.outstanding_amount = row['待还金额'] if not pd.isna(row['待还金额']) else None
+            if '数据提取日' in update_fields:
+                case_selected.data_collection_date = row['数据提取日'] if not pd.isna(row['数据提取日']) else None
+            if '代偿回购本金' in update_fields:
+                case_selected.total_repurchase_principal = row['代偿回购本金'] if not pd.isna(row['代偿回购本金']) else None
+            if '代偿回购利息' in update_fields:
+                case_selected.total_repurchase_interest = row['代偿回购利息'] if not pd.isna(row['代偿回购利息']) else None
+            if '代偿回购罚息' in update_fields:
+                case_selected.total_repurchase_penalty = row['代偿回购罚息'] if not pd.isna(row['代偿回购罚息']) else None
+            if '代偿回购总额' in update_fields:
+                case_selected.total_repurchase_all = row['代偿回购总额'] if not pd.isna(row['代偿回购总额']) else None
+            if '最晚代偿时间' in update_fields:
+                case_selected.latest_repurchase_date = row['最晚代偿时间'] if not pd.isna(row['最晚代偿时间']) else None
+            if '是否可诉讼' in update_fields:
+                case_selected.if_can_lawsuit = row['是否可诉讼'] if not pd.isna(row['是否可诉讼']) else None
+            if '承办律所' in update_fields:
+                case_selected.law_firm = row['承办律所'] if not pd.isna(row['承办律所']) else None
+            if '承办律师' in update_fields:
+                case_selected.lawyer = row['承办律师'] if not pd.isna(row['承办律师']) else None
+            if '所属省/市' in update_fields:
+                case_selected.province_city = row['所属省/市'] if not pd.isna(row['所属省/市']) else None    
+            if '法院全称' in update_fields:
+                case_selected.court = row['法院全称'] if not pd.isna(row['法院全称']) else None
+            if '案件状态' in update_fields:
+                case_selected.case_status = row['案件状态'] if not pd.isna(row['案件状态']) else None
+            if '立案号' in update_fields:
+                case_selected.case_register_id = row['立案号'] if not pd.isna(row['立案号']) else None
+            if '立案日期' in update_fields:
+                case_selected.case_register_date = row['立案日期'] if not pd.isna(row['立案日期']) else None
+            if '更新备注' in update_fields:
+                case_selected.update_remark = row['更新备注'] if not pd.isna(row['更新备注']) else None
+            if '快递单号' in update_fields:
+                case_selected.express_number = row['快递单号'] if not pd.isna(row['快递单号']) else None
+            if '被告' in update_fields:
+                case_selected.defendant = row['被告'] if not pd.isna(row['被告']) else None
+            if '开庭日期' in update_fields:
+                case_selected.trial_date = row['开庭日期'] if not pd.isna(row['开庭日期']) else None
+            if '开庭时间' in update_fields:
+                case_selected.trial_time = row['开庭时间'] if not pd.isna(row['开庭时间']) else None
+            if '标的金额' in update_fields:
+                case_selected.target_amount = row['标的金额'] if not pd.isna(row['标的金额']) else None
+            if '客户本金' in update_fields:
+                case_selected.customer_principal = row['客户本金'] if not pd.isna(row['客户本金']) else None
+            if '原告公司' in update_fields:
+                case_selected.plaintiff_company = row['原告公司'] if not pd.isna(row['原告公司']) else None
+            if '开庭律所' in update_fields:
+                case_selected.trial_law_firm = row['开庭律所'] if not pd.isna(row['开庭律所']) else None
+            if '法院电话' in update_fields:
+                case_selected.court_phone_number = row['法院电话'] if not pd.isna(row['法院电话']) else None
+            if '开庭状态' in update_fields:
+                case_selected.trial_status = row['开庭状态'] if not pd.isna(row['开庭状态']) else None
+            if '判决备注' in update_fields:
+                case_selected.sentence_remark = row['判决备注'] if not pd.isna(row['判决备注']) else None
+            if '是否结案' in update_fields:
+                case_selected.if_case_closed = row['是否结案'] if not pd.isna(row['是否结案']) else None
+            if '还款计划' in update_fields:
+                case_selected.repayment_plan = row['还款计划'] if not pd.isna(row['还款计划']) else None
+            if '开始还款日期' in update_fields:
+                case_selected.repayment_start_date = row['开始还款日期'] if not pd.isna(row['开始还款日期']) else None
+            if '渠道' in update_fields:
+                case_selected.repayment_channel = row['渠道'] if not pd.isna(row['渠道']) else None
+            if '还款备注' in update_fields:
+                case_selected.repayment_remark = row['还款备注'] if not pd.isna(row['还款备注']) else None
+                
+            if case_status is not None:
+                case_selected.case_status = case_status
+            
+            case_selected.case_update_datetime = shanghai_time_str
+            
             session.commit()
         except Exception as e:
             logger.error(e)
+            raise Exception(e)
         
         # 更新进度条
-        progress_percentage += (1 / df.shape[0])
+        progress_percentage += (1 / df_update.shape[0])
         progress_bar.progress(progress_percentage, text=progress_text)
             
     session.close()
@@ -397,84 +465,12 @@ def get_case_by_id(session: SessionClass, id: int) -> Case | None:
     
     return this_case
 
-def get_case_by_batch_id(batch_id: str) -> list[Case]:
+def get_cases_by_batch_id(batch_id: str) -> list[Case]:
     session = Session()
     cases = session.query(Case).filter_by(batch_id=batch_id).all()
     session.close()
 
     return cases
-
-def update_case_court(
-    session: SessionClass,
-    id: int,
-    court_session_open_date: Date | None = None,
-    court_session_open_time: Time | None = None,
-    outstanding_amount: str | None = None,
-    outstanding_principal: str | None = None,
-    plaintiff_company: str | None = None,
-    court_law_firm: str | None = None,
-    case_register_id: str | None = None,
-    court: str | None = None,
-    court_phone: str | None = None,
-    court_status: str | None = None,
-    judgement_remark: str | None = None,
-    is_case_closed: str | None = None,
-) -> None:
-    this_case = session.query(Case).filter_by(id=str(id)).first()
-    if this_case is None:
-        raise Exception(f"【错误】案件 {id} 不存在")
-    if court_session_open_date is not None:
-        this_case.court_session_open_date = court_session_open_date
-    if court_session_open_time is not None:
-        this_case.court_session_open_time = court_session_open_time
-    if outstanding_amount is not None:
-        this_case.outstanding_amount = outstanding_amount
-    if outstanding_principal is not None:
-        this_case.outstanding_principal = outstanding_principal
-    if plaintiff_company is not None:
-        this_case.plaintiff_company = plaintiff_company
-    if court_law_firm is not None:
-        this_case.court_law_firm = court_law_firm
-    if case_register_id is not None:
-        this_case.case_register_id = case_register_id
-    if court is not None:
-        this_case.court = court
-    if court_phone is not None:
-        this_case.court_phone = court_phone
-    if court_status is not None:
-        this_case.court_status = court_status
-    if judgement_remark is not None:
-        this_case.judgement_remark = judgement_remark
-    if is_case_closed is not None:
-        this_case.is_case_closed = is_case_closed
-    this_case.case_update_datetime = datetime.now()
-
-def update_case(
-    session: SessionClass, 
-    id: int, 
-    register_user_id: int | None = None,
-    print_user_id: int | None = None,
-    status_id: int | None = None,
-    case_register_id: str | None = None,
-    case_register_date: Date | None = None,
-    court_session_open_date: Date | None = None,
-) -> None:
-    this_case = session.query(Case).filter_by(id=str(id)).first()
-    if this_case is None:
-        raise Exception(f"【错误】案件 {id} 不存在")
-    if register_user_id is not None:
-        this_case.case_register_user_id = register_user_id
-    if print_user_id is not None:
-        this_case.case_print_user_id = print_user_id
-    if status_id is not None:
-        this_case.status_id = status_id
-    if case_register_id is not None:
-        this_case.case_register_id = case_register_id
-    if case_register_date is not None:
-        this_case.case_register_date = case_register_date
-    if court_session_open_date is not None:
-        this_case.court_session_open_date = court_session_open_date
-    this_case.case_update_datetime = datetime.now()
 
 def delete_case_by_id(session: SessionClass, id: int | None) -> None:
     case_to_delete = session.query(Case).filter_by(id=id).first()
@@ -486,16 +482,6 @@ def get_all_users() -> list[User]:
     session.close()
 
     return users
-
-def get_all_users_df() -> pd.DataFrame:
-    session = Session()
-    users = session.query(User).all()
-    session.close()
-
-    df = pd.DataFrame([user.__dict__ for user in users])
-    df = df.drop(columns=['_sa_instance_state'])
-
-    return df
 
 def get_user_by_username(username: str) -> User | None:
     session = Session()
