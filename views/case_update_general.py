@@ -75,7 +75,7 @@ xlsx_file = st.file_uploader("请上传案件更新信息Excel文件", type=["xl
 
 # Excel样例下载
 st.download_button(
-    label="下载Excel样例",
+    label="下载Excel样例 - 更新导入模版.xlsx",
     data=open("data/2_更新导入模版.xlsx", "rb").read(),
     file_name="更新导入模版.xlsx",
     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",

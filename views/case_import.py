@@ -2,11 +2,13 @@ import streamlit as st
 import pandas as pd
 from loguru import logger
 from datetime import datetime
+import pytz
 
 from package.database import (
     get_all_batch_ids,
-    read_cases_from_sql, 
+    read_cases_from_sql,
     import_cases,
+    delete_cases_by_batch_id,
 )
 from package.utils import get_cases_df_display
 from views.sidebar import sidebar
@@ -19,60 +21,62 @@ st.header("法诉案件管理系统 (案件首次导入)")
 all_batch_ids = get_all_batch_ids()
 
 # 对应的批次ID进行排序，先按年份降序，再按月份降序，由近到远。
-all_batch_ids.sort(key=lambda x: int(x.split('-')[1]), reverse=True)
-all_batch_ids.sort(key=lambda x: int(x.split('-')[0]), reverse=True)
+all_batch_ids.sort(key=lambda x: int(x.split("-")[1]), reverse=True)
+all_batch_ids.sort(key=lambda x: int(x.split("-")[0]), reverse=True)
 
 # 获取当前日期和月份
-today = datetime.now()
-year_of_today = today.year
-month_of_today = today.month
+shanghai_tz = pytz.timezone("Asia/Shanghai")
+shanghai_time = datetime.now(shanghai_tz)
+year_of_today = shanghai_time.year
+month_of_today = shanghai_time.month
 
 if not all_batch_ids:
+    batch_id = None
     st.warning("案件信息表为空")
 else:
     # 需要显示的数据库字段名和页面字段名对应关系
     columns_pairs = [
-        ('batch_id', '批次ID'),
-        ('company_name', '公司名称'),
-        ('shou_bie', '手别'),
-        ('case_id', '案件id'),
-        ('user_id', '用户ID'),
-        ('user_name', '用户名'),
-        ('full_name', '用户姓名'),
-        ('id_card', '身份证号码'),
-        ('gender', '性别'),
-        ('nationality', '民族'),
-        ('id_card_address', '身份证地址'),
-        ('mobile_phone', '注册手机号'),
-        ('list_id', '列表ID'),
-        ('rongdan_mode', '融担模式'),
-        ('contract_id', '合同号'),
-        ('capital_institution', '资方机构'),
-        ('rongdan_company', '融担公司'),
-        ('contract_amount', '合同金额'),
-        ('loan_date', '放款日期'),
-        ('last_due_date', '最后一期应还款日'),
-        ('loan_terms', '借款期数'),
-        ('interest_rate', '利率'),
-        ('overdue_start_date', '逾期开始日期'),
-        ('last_pay_date', '上一个还款日期'),
-        ('overdue_days', '列表逾期天数'),
-        ('outstanding_principal', '待还本金'),
-        ('outstanding_charge', '待还费用'),
-        ('outstanding_amount', '待还金额'),
-        ('data_collection_date', '数据提取日'),
-        ('total_repurchase_principal', '代偿回购本金'),
-        ('total_repurchase_interest', '代偿回购利息'),
-        ('total_repurchase_penalty', '代偿回购罚息'),
-        ('total_repurchase_all', '代偿回购总额'),
-        ('latest_repurchase_date', '最晚代偿时间'),
-        ('if_can_lawsuit', '是否可诉'),
-        ('law_firm', '承办律所'),
-        ('lawyer', '承办律师'),
-        ('province_city', '所属省/市'),
-        ('court', '法院全称'),
-        ('case_status', '案件状态'),
-        ('case_update_datetime', '案件更新时间')
+        ("batch_id", "批次ID"),
+        ("company_name", "公司名称"),
+        ("shou_bie", "手别"),
+        ("case_id", "案件id"),
+        ("user_id", "用户ID"),
+        ("user_name", "用户名"),
+        ("full_name", "用户姓名"),
+        ("id_card", "身份证号码"),
+        ("gender", "性别"),
+        ("nationality", "民族"),
+        ("id_card_address", "身份证地址"),
+        ("mobile_phone", "注册手机号"),
+        ("list_id", "列表ID"),
+        ("rongdan_mode", "融担模式"),
+        ("contract_id", "合同号"),
+        ("capital_institution", "资方机构"),
+        ("rongdan_company", "融担公司"),
+        ("contract_amount", "合同金额"),
+        ("loan_date", "放款日期"),
+        ("last_due_date", "最后一期应还款日"),
+        ("loan_terms", "借款期数"),
+        ("interest_rate", "利率"),
+        ("overdue_start_date", "逾期开始日期"),
+        ("last_pay_date", "上一个还款日期"),
+        ("overdue_days", "列表逾期天数"),
+        ("outstanding_principal", "待还本金"),
+        ("outstanding_charge", "待还费用"),
+        ("outstanding_amount", "待还金额"),
+        ("data_collection_date", "数据提取日"),
+        ("total_repurchase_principal", "代偿回购本金"),
+        ("total_repurchase_interest", "代偿回购利息"),
+        ("total_repurchase_penalty", "代偿回购罚息"),
+        ("total_repurchase_all", "代偿回购总额"),
+        ("latest_repurchase_date", "最晚代偿时间"),
+        ("if_can_lawsuit", "是否可诉"),
+        ("law_firm", "承办律所"),
+        ("lawyer", "承办律师"),
+        ("province_city", "所属省/市"),
+        ("court", "法院全称"),
+        ("case_status", "案件状态"),
+        ("case_update_datetime", "案件更新时间"),
     ]
 
     col_11, _, _, _ = st.columns(4)
@@ -86,23 +90,41 @@ else:
             placeholder="选择批次ID",
             index=0,
         )
-        
+
     # 如选择了批次ID，则针对该批次ID进行筛选
     if batch_id is not None:
         case_df = read_cases_from_sql(batch_id)
         case_df_display = get_cases_df_display(case_df, columns_pairs)
-        
+
     st.dataframe(case_df_display, hide_index=True)
     st.write(f"案件总数: {len(case_df)}")
-    
+
 if st.session_state.role == "staff":
     st.stop()
-    
+
+with st.expander("删除当前批次所有案件（删除后无法找回，请慎重！)", expanded=False):
+    confirm_batch_id = st.text_input(
+        "请输入批次ID", 
+        placeholder="为避免误删，请手动输入当前批次ID",
+        label_visibility="collapsed",
+        key="confirm_batch_id"
+    )
+    if st.button("确认删除", type="primary"):
+        if confirm_batch_id == batch_id:
+            try:
+                delete_cases_by_batch_id(batch_id)
+                st.rerun()
+            except Exception as e:
+                logger.error(e)
+                st.write(e)
+        else:
+            st.error("请选择正确的批次ID")
+
 xlsx_file = st.file_uploader("请上传案件信息Excel文件", type=["xlsx"])
 
 # Excel样例下载
 st.download_button(
-    label="下载Excel样例",
+    label="下载Excel样例 - 首次导入模版.xlsx",
     data=open("data/1_首次导入模版.xlsx", "rb").read(),
     file_name="首次导入模版.xlsx",
     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -115,7 +137,7 @@ with col_21:
     batch_year = st.selectbox(
         "批次年份",
         [year for year in range(2024, 2034)],
-        index=(year_of_today-2024),
+        index=(year_of_today - 2024),
     )
 
 with col_22:
@@ -123,7 +145,7 @@ with col_22:
     batch_month = st.selectbox(
         "批次月份",
         [month for month in range(1, 13)],
-        index=(month_of_today-1),
+        index=(month_of_today - 1),
     )
 
 # 将批次年份和批次月份拼接成批次ID
@@ -133,7 +155,7 @@ batch_id_upload = f"{batch_year}-{batch_month}"
 if xlsx_file is not None:
     df_import = pd.read_excel(xlsx_file, dtype=str)
     df_import_standard = pd.read_excel("data/1_首次导入模版.xlsx", dtype=str)
-    
+
     if df_import.columns.tolist() != df_import_standard.columns.tolist():
         logger.error("Excel文件的字段与“首次导入模版”不匹配，请检查")
         raise ValueError("Excel文件的字段与“首次导入模版”不匹配，请检查")

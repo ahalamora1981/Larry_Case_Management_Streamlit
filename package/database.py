@@ -7,16 +7,16 @@ from loguru import logger
 from datetime import datetime
 import pytz
 from sqlalchemy import (
-    create_engine, Column, Integer, String, distinct
+    create_engine, Column, Integer, String, distinct, func
 )
+from sqlalchemy import or_, and_
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy.orm import Session as SessionClass
 
 
 CWD = os.getcwd()
 
-# 创建数据库引擎，连接到 SQLite 数据库（如果数据库不存在，会自动创建）
+# 创建数据库引擎，连接到 SQLite 数据库（如果数据库不存在，会自动创建)}
 engine_lawsuit = create_engine('sqlite:///lawsuit.db', echo=True)
 
 # 创建一个基类，用于定义表
@@ -35,7 +35,7 @@ class Case(Base):
     case_id = Column(String)  # 案件id
     user_id = Column(String)  # 用户ID
     user_name = Column(String)  # 用户名
-    full_name = Column(String)  # 用户姓名
+    full_name = Column(String)  # 用户姓名 | 被告(开庭表)
     id_card = Column(String)  # 身份证号码
     gender = Column(String)  # 性别
     nationality = Column(String)  # 民族
@@ -54,9 +54,9 @@ class Case(Base):
     overdue_start_date = Column(String)  # 逾期开始日期
     last_pay_date = Column(String)  # 上一个还款日期
     overdue_days = Column(String)  # 列表逾期天数
-    outstanding_principal = Column(String)  # 原始类型：Column(Float)    # 待还本金
+    outstanding_principal = Column(String)  # 原始类型：Column(Float)    # 待还本金 | 客户本金(开庭表)
     outstanding_charge = Column(String)  # 原始类型：Column(Float)    # 待还费用
-    outstanding_amount = Column(String)  # 原始类型：Column(Float)    # 待还金额
+    outstanding_amount = Column(String)  # 原始类型：Column(Float)    # 待还金额 | 标的金额(开庭表)
     data_collection_date = Column(String)  # 数据提取日
     total_repurchase_principal = Column(String)  # 原始类型：Column(Float)    # 代偿回购本金
     total_repurchase_interest = Column(String)  # 原始类型：Column(Float)    # 代偿回购利息
@@ -82,11 +82,8 @@ class Case(Base):
     express_number = Column(String, default=None) # 快递单号
     
     ### 【开庭时间表导入模版】新增 ###
-    defendant = Column(String, default=None)  # 被告
     trial_date = Column(String, default=None)  # 开庭日期
     trial_time = Column(String, default=None)  # 开庭时间
-    target_amount = Column(String, default=None)  # 标的金额
-    customer_principal = Column(String, default=None)  # 客户本金
     plaintiff_company = Column(String, default=None)  # 原告公司
     trial_law_firm = Column(String, default=None)  # 开庭律所
     court_phone_number = Column(String, default=None)  # 法院电话
@@ -163,7 +160,7 @@ def read_cases_from_sql(batch_id: str) -> pd.DataFrame:
     df = pd.read_sql_query(query, engine_lawsuit, index_col='id')
     return df
 
-def read_user_from_sql() -> pd.DataFrame:
+def read_users_from_sql() -> pd.DataFrame:
     df = pd.read_sql_table("users", engine_lawsuit, index_col='id')
     return df
 
@@ -242,18 +239,15 @@ def import_cases(df_import: pd.DataFrame, batch_id: str) -> str | None:
             case_express_user = None,
             case_update_datetime = shanghai_time_str,
             
-            ### 【更新导入模版】新增 ###
+            ### 【更新导入模版】新增（仅作参考） ###
             # case_register_id = row['立案号'] if not pd.isna(row['立案号']) else None,
             # case_register_date = row['立案日期'] if not pd.isna(row['立案日期']) else None,
             # update_remark = row['更新备注'] if not pd.isna(row['更新备注']) else None,
             # express_number = row['快递单号'] if not pd.isna(row['快递单号']) else None,
             
-            ### 【开庭时间表导入模版】新增 ###
-            # defendant = row['被告'] if not pd.isna(row['被告']) else None,
+            ### 【开庭时间表导入模版】新增（仅作参考） ###
             # trial_date = row['开庭日期'] if not pd.isna(row['开庭日期']) else None,
             # trial_time = row['开庭时间'] if not pd.isna(row['开庭时间']) else None,
-            # target_amount = row['标的金额'] if not pd.isna(row['标的金额']) else None,
-            # customer_principal = row['客户本金'] if not pd.isna(row['客户本金']) else None,
             # plaintiff_company = row['原告公司'] if not pd.isna(row['原告公司']) else None,
             # trial_law_firm = row['开庭律所'] if not pd.isna(row['开庭律所']) else None,
             # court_phone_number = row['法院电话'] if not pd.isna(row['法院电话']) else None,
@@ -261,10 +255,10 @@ def import_cases(df_import: pd.DataFrame, batch_id: str) -> str | None:
             # sentence_remark = row['判决备注'] if not pd.isna(row['判决备注']) else None,
             # if_case_closed = row['是否结案'] if not pd.isna(row['是否结案']) else None,
             
-            ### 【邮寄状态变更模版】新增 ###
+            ### 【邮寄状态变更模版】新增（仅作参考） ###
             # 无
             
-            ### 【案件还款计划导入模版】新增 ###
+            ### 【案件还款计划导入模版】新增（仅作参考） ###
             # repayment_plan = row['还款计划'] if not pd.isna(row['还款计划']) else None,
             # repayment_start_date = row['开始还款日期'] if not pd.isna(row['开始还款日期']) else None,
             # repayment_channel = row['渠道'] if not pd.isna(row['渠道']) else None,
@@ -325,8 +319,13 @@ def update_cases(
                 case_selected.user_id = row['用户ID'] if not pd.isna(row['用户ID']) else None
             if '用户名' in update_fields:
                 case_selected.user_name = row['用户名'] if not pd.isna(row['用户名']) else None
+            
+            # “用户姓名”为原始字段，则“被告”为开庭表中相同字段的别名
             if '用户姓名' in update_fields:
                 case_selected.full_name = row['用户姓名'] if not pd.isna(row['用户姓名']) else None
+            elif '被告' in update_fields:
+                case_selected.full_name = row['被告'] if not pd.isna(row['被告']) else None
+                
             if '身份证号码' in update_fields:
                 case_selected.id_card = row['身份证号码'] if not pd.isna(row['身份证号码']) else None
             if '性别' in update_fields:
@@ -363,12 +362,22 @@ def update_cases(
                 case_selected.last_pay_date = row['上一个还款日期'] if not pd.isna(row['上一个还款日期']) else None
             if '列表逾期天数' in update_fields:
                 case_selected.overdue_days = row['列表逾期天数'] if not pd.isna(row['列表逾期天数']) else None
+            
+            # “待还本金”为原始字段，则“客户本金”为开庭表中相同字段的别名
             if '待还本金' in update_fields:
                 case_selected.outstanding_principal = row['待还本金'] if not pd.isna(row['待还本金']) else None
+            elif '客户本金' in update_fields:
+                case_selected.outstanding_principal = row['客户本金'] if not pd.isna(row['客户本金']) else None
+                
             if '待还费用' in update_fields:
                 case_selected.outstanding_charge = row['待还费用'] if not pd.isna(row['待还费用']) else None
+            
+            # “待还金额”为原始字段，则“标的金额”为开庭表中相同字段的别名
             if '待还金额' in update_fields:
                 case_selected.outstanding_amount = row['待还金额'] if not pd.isna(row['待还金额']) else None
+            elif '标的金额' in update_fields:
+                case_selected.outstanding_amount = row['标的金额'] if not pd.isna(row['标的金额']) else None
+                
             if '数据提取日' in update_fields:
                 case_selected.data_collection_date = row['数据提取日'] if not pd.isna(row['数据提取日']) else None
             if '代偿回购本金' in update_fields:
@@ -401,8 +410,6 @@ def update_cases(
                 case_selected.update_remark = row['更新备注'] if not pd.isna(row['更新备注']) else None
             if '快递单号' in update_fields:
                 case_selected.express_number = row['快递单号'] if not pd.isna(row['快递单号']) else None
-            if '被告' in update_fields:
-                case_selected.defendant = row['被告'] if not pd.isna(row['被告']) else None
             if '开庭日期' in update_fields:
                 case_selected.trial_date = row['开庭日期'] if not pd.isna(row['开庭日期']) else None
             if '开庭时间' in update_fields:
@@ -457,44 +464,108 @@ def get_all_cases() -> list[Case]:
     session = Session()
     cases = session.query(Case).all()
     session.close()
-
     return cases
 
-def get_case_by_id(session: SessionClass, id: int) -> Case | None:
+def get_count_all_cases() -> int:
+    session = Session()
+    count = session.query(func.count(Case.id)).scalar()
+    session.close()
+    return count
+
+def get_case_by_id(id: int) -> Case | None:
+    session = Session()
     this_case = session.query(Case).filter_by(id=str(id)).first()
-    
+    session.close()
     return this_case
 
 def get_cases_by_batch_id(batch_id: str) -> list[Case]:
     session = Session()
     cases = session.query(Case).filter_by(batch_id=batch_id).all()
     session.close()
-
     return cases
 
-def delete_case_by_id(session: SessionClass, id: int | None) -> None:
+def get_count_by_batch_id(batch_id: str) -> int:
+    session = Session()
+    count = session.query(func.count(Case.id)).filter_by(batch_id=batch_id).scalar()
+    session.close()
+    return count
+
+def get_count_by_batch_id_and_registered(batch_id: str) -> int:
+    """
+    获取指定批次下符合条件的案件数量
+    
+    过滤案件状态为网上立案成功、邮寄材料、诉前调解，或者快递单号不为空
+    """
+    session = Session()
+    count = session.query(
+        func.count(Case.id)
+    ).filter_by(
+        batch_id=batch_id
+    ).filter(
+        or_(
+            Case.case_status == "网上立案成功",
+            Case.case_status == "邮寄材料",
+            Case.case_status == "诉前调解",
+            and_(
+                Case.express_number.isnot(None),
+                Case.express_number != ""
+            )
+        )
+    ).scalar()
+    return count
+
+def get_count_by_batch_id_and_repayment(batch_id: str) -> int:
+    session = Session()
+    count = session.query(
+        func.count(Case.id)
+    ).filter_by(
+        batch_id=batch_id
+    ).filter(
+        and_(
+            Case.repayment_plan.isnot(None),
+            Case.repayment_plan != ""
+        )
+    ).scalar()
+    return count
+
+def get_count_by_year(year: int) -> int:
+    session = Session()
+    count = session.query(func.count(Case.batch_id)).filter(Case.batch_id.like(f'{year}-%')).scalar()
+    session.close()
+    return count
+
+def delete_cases_by_batch_id(batch_id: str) -> None:
+    session = Session()
+    cases_to_delete = session.query(Case).filter_by(batch_id=batch_id).all()
+    for case in cases_to_delete:
+        session.delete(case)
+    session.commit()
+    session.close()
+    return None
+
+def delete_case_by_id(id: int | None) -> None:
+    session = Session()
     case_to_delete = session.query(Case).filter_by(id=id).first()
     session.delete(case_to_delete)
+    session.commit()
+    return None
 
 def get_all_users() -> list[User]:
     session = Session()
     users = session.query(User).all()
     session.close()
-
     return users
 
 def get_user_by_username(username: str) -> User | None:
     session = Session()
     user = session.query(User).filter_by(username=username).first()
     session.close()
-
     return user
 
 def get_user_by_id(id: int) -> User | None:
     session = Session()
     user = session.query(User).filter_by(id=str(id)).first()
     session.close()
-
     return user
 
 def add_user(username: str, hashed_password: str, role: str) -> str | None:
@@ -510,6 +581,7 @@ def add_user(username: str, hashed_password: str, role: str) -> str | None:
     session.add(new_user)
     session.commit()
     session.close()
+    return None
 
 def delete_user(id: int) -> None:
     session = Session()
@@ -517,6 +589,7 @@ def delete_user(id: int) -> None:
     session.delete(user_to_delete)
     session.commit()
     session.close()
+    return None
 
 def reset_username(id: int, username: str) -> None:
     session = Session()
@@ -535,12 +608,15 @@ def reset_username(id: int, username: str) -> None:
         session.close()
         raise Exception(f"【错误】用户 {username} 已存在")
 
+    return None
+
 def reset_role(id: int, role: str) -> None:
     session = Session()
     user = session.query(User).filter_by(id=id).first()
     user.role = role
     session.commit()
     session.close()
+    return None
 
 def reset_password(id: int, hashed_password: str) -> None:
     session = Session()
@@ -548,3 +624,4 @@ def reset_password(id: int, hashed_password: str) -> None:
     user.password = hashed_password
     session.commit()
     session.close()
+    return None

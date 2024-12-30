@@ -33,11 +33,11 @@ else:
         ('batch_id', '批次ID'),
         ('user_name', '用户名'),
         ('list_id', '列表ID'),
-        ('defendant', '被告'),
+        ('full_name', '被告'),
         ('trial_date', '开庭日期'),
         ('trial_time', '开庭时间'),
-        ('target_amount', '标的金额'),
-        ('customer_principal', '客户本金'),
+        ('outstanding_amount', '标的金额'),
+        ('outstanding_principal', '客户本金'),
         ('plaintiff_company', '原告公司'),
         ('trial_law_firm', '开庭律所'),
         ('court_phone_number', '法院电话'),
@@ -73,7 +73,7 @@ xlsx_file = st.file_uploader("请上传案件更新信息Excel文件", type=["xl
 
 # Excel样例下载
 st.download_button(
-    label="下载Excel样例",
+    label="下载Excel样例 - 开庭时间表导入模版.xlsx",
     data=open("data/4_开庭时间表导入模版.xlsx", "rb").read(),
     file_name="开庭时间表导入模版.xlsx",
     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",

@@ -54,7 +54,6 @@ def ui_main() -> None:
     elif st.session_state.role == "staff":
         pg = st.navigation([
             st.Page(os.path.join(CWD, "views", "dashboard.py"), title="案件统计"),
-            st.Page(os.path.join(CWD, "views", "case_import.py"), title="案件首次导入"),
             st.Page(os.path.join(CWD, "views", "case_update_general.py"), title="案件更新"),
             st.Page(os.path.join(CWD, "views", "case_update_express.py"), title="邮寄状态变更"),
             st.Page(os.path.join(CWD, "views", "case_update_trial.py"), title="开庭时间更新"),
